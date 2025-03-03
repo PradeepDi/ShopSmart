@@ -5,6 +5,7 @@
       "expo-router"
     ],
     "name": "shopsmart",
-    "slug": "shopsmart"
+    "slug": "shopsmart",
+    "entryPoint": "./src/App.tsx"
   }
 }
