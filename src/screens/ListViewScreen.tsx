@@ -15,6 +15,7 @@ const ListViewScreen = () => {
   const { listId, listName } = route.params || { listId: null, listName: 'Default List' };
   const [items, setItems] = useState<string[]>([]);
   const [checkedItems, setCheckedItems] = useState<boolean[]>([]);
+  const [itemIds, setItemIds] = useState<number[]>([]); // Store item IDs for database operations
   const [modalVisible, setModalVisible] = useState(false);
   const [newItem, setNewItem] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -36,15 +37,20 @@ const ListViewScreen = () => {
     const fetchItems = async () => {
       const { data, error } = await supabase
         .from('items') // Assuming you have an 'items' table
-        .select('name')
+        .select('id, name, is_checked')
         .eq('list_id', listId);
 
       if (error) {
         console.error(error);
       } else {
-        const itemNames = data.map((item: { name: string }) => item.name);
+        const itemNames = data.map((item: { name: string, id: number, is_checked: boolean }) => item.name);
         setItems(itemNames);
-        setCheckedItems(new Array(itemNames.length).fill(false));
+        // Use the is_checked value from the database or default to false if not present
+        const checkedStatus = data.map((item: { is_checked: boolean }) => item.is_checked || false);
+        setCheckedItems(checkedStatus);
+        
+        // Store the item IDs for database operations
+        setItemIds(data.map((item: { id: number }) => item.id));
       }
     };
 
@@ -82,15 +88,42 @@ const ListViewScreen = () => {
     }
   };
 
-  const toggleItemCheck = (index: number) => {
+  const toggleItemCheck = async (index: number) => {
     const newCheckedItems = [...checkedItems];
     newCheckedItems[index] = !newCheckedItems[index];
     setCheckedItems(newCheckedItems);
+    
+    // Save the checked status to the database if user is logged in
+    if (isLoggedIn && itemIds[index]) {
+      const { error } = await supabase
+        .from('items')
+        .update({ is_checked: newCheckedItems[index] })
+        .eq('id', itemIds[index]);
+      
+      if (error) {
+        console.error('Error updating item check status:', error);
+      }
+    }
   };
 
-  const deleteItem = (index: number) => {
+  const deleteItem = async (index: number) => {
+    // Delete the item from the database if we have its ID
+    if (itemIds[index]) {
+      const { error } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', itemIds[index]);
+      
+      if (error) {
+        console.error('Error deleting item:', error);
+        return;
+      }
+    }
+    
+    // Update local state
     setItems(items.filter((_, i) => i !== index));
     setCheckedItems(checkedItems.filter((_, i) => i !== index));
+    setItemIds(itemIds.filter((_, i) => i !== index));
   };
 
   const addItem = async () => {
