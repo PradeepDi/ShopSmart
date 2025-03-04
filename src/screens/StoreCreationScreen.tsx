@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet, ScrollView, Text } from 'react-native';
 import { Button, TextInput, Title, Snackbar } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
@@ -49,7 +49,7 @@ export const StoreCreationScreen = () => {
       
       // Navigate back to vendor dashboard after successful creation
       setTimeout(() => {
-        navigation.goBack();
+        navigation.navigate('VendorDashboard' as never);
       }, 1500);
     } catch (error) {
       console.error('Error creating store:', error);
@@ -61,66 +61,71 @@ export const StoreCreationScreen = () => {
   };
 
   const handleCancel = () => {
-    navigation.goBack();
+    navigation.navigate('VendorDashboard' as never);
   };
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Create Store</Text>
+      </View>
       <ScrollView style={styles.formContainer}>
-        <Title style={styles.title}>Create New Store</Title>
-        
-        <TextInput
-          label="Store Name *"
-          value={name}
-          onChangeText={setName}
-          style={styles.input}
-          mode="outlined"
-        />
-        
-        <TextInput
-          label="Address *"
-          value={address}
-          onChangeText={setAddress}
-          style={styles.input}
-          mode="outlined"
-          multiline
-        />
-        
-        <TextInput
-          label="Contact Information *"
-          value={contact}
-          onChangeText={setContact}
-          style={styles.input}
-          mode="outlined"
-        />
-        
-        <TextInput
-          label="Map Link (Optional)"
-          value={mapLink}
-          onChangeText={setMapLink}
-          style={styles.input}
-          mode="outlined"
-          placeholder="https://maps.google.com/..."
-        />
-        
-        <View style={styles.buttonContainer}>
-          <Button 
-            mode="outlined" 
-            onPress={handleCancel} 
-            style={styles.button}
-          >
-            Cancel
-          </Button>
+        <View style={styles.content}>
+          <TextInput
+            label="Store Name *"
+            value={name}
+            onChangeText={setName}
+            style={styles.input}
+            mode="outlined"
+          />
           
-          <Button 
-            mode="contained" 
-            onPress={handleCreateStore} 
-            style={styles.button}
-            loading={loading}
-            disabled={loading}
-          >
-            Create Store
-          </Button>
+          <TextInput
+            label="Address *"
+            value={address}
+            onChangeText={setAddress}
+            style={styles.input}
+            mode="outlined"
+            multiline
+          />
+          
+          <TextInput
+            label="Contact Information *"
+            value={contact}
+            onChangeText={setContact}
+            style={styles.input}
+            mode="outlined"
+          />
+          
+          <TextInput
+            label="Map Link (Optional)"
+            value={mapLink}
+            onChangeText={setMapLink}
+            style={styles.input}
+            mode="outlined"
+            placeholder="https://maps.google.com/..."
+          />
+          
+          <View style={styles.buttonContainer}>
+            <Button 
+              mode="outlined" 
+              onPress={handleCancel} 
+              style={styles.button}
+              textColor='#FF6F61'
+            >
+              Cancel
+            </Button>
+            
+            <Button 
+              mode="contained" 
+              onPress={handleCreateStore} 
+              style={styles.button}
+              loading={loading}
+              disabled={loading}
+              buttonColor="#FF6F61"
+            >
+              Create Store
+            </Button>
+          </View>
         </View>
       </ScrollView>
       
@@ -138,23 +143,38 @@ export const StoreCreationScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FAF3F3',
   },
-  formContainer: {
-    padding: 16,
+  header: {
+    backgroundColor: '#FF6F61',
+    width: '100%',
+    paddingVertical: 60,
+    alignItems: 'center',
+    borderBottomLeftRadius: 50,
+    borderBottomRightRadius: 50,
   },
   title: {
-    fontSize: 24,
-    marginBottom: 20,
-    textAlign: 'center',
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  formContainer: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+    alignItems: 'center',
   },
   input: {
-    marginBottom: 16,
+    width: '80%',
+    marginVertical: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 16,
+    width: '80%',
   },
   button: {
     flex: 1,
