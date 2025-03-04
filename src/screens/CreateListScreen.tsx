@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert } from 'react-native';
-import { TextInput, Button, IconButton } from 'react-native-paper';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator } from 'react-native';
+import { TextInput, Button, IconButton, Chip } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -14,6 +14,7 @@ const CreateListScreen = () => {
   const [items, setItems] = useState<string[]>([]);
   const [itemName, setItemName] = useState('');
   const [isCreating, setIsCreating] = useState(false); // Guard to prevent duplicate submissions
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null means loading state
 
   const addItem = () => {
     if (itemName.trim()) {
@@ -26,31 +27,40 @@ const CreateListScreen = () => {
     setItems(items.filter((_, i) => i !== index));
   };
 
+  // Check user authentication status when component mounts
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const { data: userResponse, error: userError } = await supabase.auth.getUser();
+      setIsLoggedIn(!userError && userResponse?.user ? true : false);
+    };
+    
+    checkAuthStatus();
+  }, []);
+
   const createList = async () => {
     // Prevent duplicate submissions
     if (isCreating) return;
     setIsCreating(true);
 
-    const { data: userResponse, error: userError } = await supabase.auth.getUser();
-
-    if (userError || !userResponse?.user) {
-      Alert.alert('Error', 'Unable to retrieve user information.');
-      setIsCreating(false);
-      return;
-    }
-
-    const user = userResponse.user;
-
+    // Check for basic validation first
     if (!listName.trim() || items.length === 0) {
       Alert.alert('Incomplete Input', 'Please enter a list name and add at least one item.');
       setIsCreating(false);
       return;
     }
 
-    // Save the list to the database with the user ID
+    // Try to get user information
+    const { data: userResponse, error: userError } = await supabase.auth.getUser();
+    const isLoggedIn = !userError && userResponse?.user;
+
+    // Save the list to the database (with or without user ID)
+    const listPayload = isLoggedIn 
+      ? { name: listName, user_id: userResponse.user.id } 
+      : { name: listName, is_anonymous: true };
+
     const { data: listData, error: listError } = await supabase
       .from('lists')
-      .insert([{ name: listName, user_id: user.id }])
+      .insert([listPayload])
       .select();
 
     if (listError || !listData) {
@@ -72,7 +82,16 @@ const CreateListScreen = () => {
       console.error('Items Insert Error:', itemsError);
       Alert.alert('Error', itemsError.message || 'An unknown error occurred.');
     } else {
-      navigation.navigate('Dashboard');
+      // Navigate based on user authentication status
+      if (isLoggedIn) {
+        navigation.navigate('Dashboard');
+      } else {
+        // For non-logged in users, navigate to the ListView screen with the new list
+        navigation.navigate('ListView', { 
+          listId: listData[0].id, 
+          listName: listName 
+        });
+      }
     }
     setIsCreating(false);
   };
@@ -83,6 +102,24 @@ const CreateListScreen = () => {
         <Text style={styles.title}>Create List</Text>
       </View>
       <View style={styles.content}>
+        {isLoggedIn === null ? (
+          <ActivityIndicator size="large" color="#FF6F61" style={styles.loader} />
+        ) : (
+          <View style={styles.authStatusContainer}>
+            <Chip 
+              icon={isLoggedIn ? "account-check" : "account-question"}
+              mode="outlined" 
+              style={[styles.authChip, isLoggedIn ? styles.loggedInChip : styles.anonymousChip]}
+            >
+              {isLoggedIn ? "Logged In" : "Guest Mode"}
+            </Chip>
+            {!isLoggedIn && (
+              <Text style={styles.guestMessage}>
+                You're creating a list as a guest. You can still access this list later with the link provided after creation.
+              </Text>
+            )}
+          </View>
+        )}
         <TextInput
           label="List Name"
           mode="outlined"
@@ -119,9 +156,20 @@ const CreateListScreen = () => {
           style={styles.button}
           onPress={createList}
           disabled={isCreating} // Optionally disable the button while processing
+          loading={isCreating}
         >
-          Create List
+          {isCreating ? 'Creating...' : 'Create List'}
         </Button>
+        {!isLoggedIn && (
+          <Button
+            mode="text"
+            onPress={() => navigation.navigate('Login')}
+            style={styles.loginButton}
+            textColor= "#FF6F61"
+          >
+            Login to save lists to your account
+          </Button>
+        )}
       </View>
     </View>
   );
@@ -131,6 +179,33 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAF3F3',
+  },
+  loader: {
+    marginVertical: 20,
+  },
+  authStatusContainer: {
+    width: '80%',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  authChip: {
+    marginBottom: 10,
+  },
+  loggedInChip: {
+    backgroundColor: '#E8F5E9',
+  },
+  anonymousChip: {
+    backgroundColor: '#FFF8E1',
+  },
+  guestMessage: {
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 10,
+    fontSize: 12,
+  },
+  loginButton: {
+    marginTop: 10,
+    color: '#FF6F61',
   },
   header: {
     backgroundColor: '#FF6F61',

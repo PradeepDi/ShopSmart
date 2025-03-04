@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Modal } from 'react-native';
-import { IconButton, Button, TextInput } from 'react-native-paper';
+import { IconButton, Button, TextInput, Checkbox } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -14,9 +14,23 @@ const ListViewScreen = () => {
   const route = useRoute<ListViewScreenRouteProp>();
   const { listId, listName } = route.params || { listId: null, listName: 'Default List' };
   const [items, setItems] = useState<string[]>([]);
+  const [checkedItems, setCheckedItems] = useState<boolean[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newItem, setNewItem] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // Track authentication status
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingItem, setEditingItem] = useState({ index: -1, text: '' });
+
+  // Check user authentication status when component mounts
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const { data: userResponse, error: userError } = await supabase.auth.getUser();
+      setIsLoggedIn(!userError && userResponse?.user ? true : false);
+    };
+    
+    checkAuthStatus();
+  }, []);
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -28,7 +42,9 @@ const ListViewScreen = () => {
       if (error) {
         console.error(error);
       } else {
-        setItems(data.map((item: { name: string }) => item.name));
+        const itemNames = data.map((item: { name: string }) => item.name);
+        setItems(itemNames);
+        setCheckedItems(new Array(itemNames.length).fill(false));
       }
     };
 
@@ -38,11 +54,43 @@ const ListViewScreen = () => {
   }, [listId]);
 
   const editItem = (index: number) => {
-    // Handle edit logic
+    setEditingItem({ index, text: items[index] });
+    setEditModalVisible(true);
+  };
+
+  const saveEditedItem = async () => {
+    if (editingItem.text.trim() && editingItem.index !== -1) {
+      // Update the item in the database
+      const { data, error } = await supabase
+        .from('items')
+        .update({ name: editingItem.text.trim() })
+        .eq('list_id', listId)
+        .eq('name', items[editingItem.index])
+        .select();
+
+      if (error) {
+        console.error('Error updating item:', error);
+        return;
+      }
+
+      // Update the local state
+      const updatedItems = [...items];
+      updatedItems[editingItem.index] = editingItem.text.trim();
+      setItems(updatedItems);
+      setEditModalVisible(false);
+      setEditingItem({ index: -1, text: '' });
+    }
+  };
+
+  const toggleItemCheck = (index: number) => {
+    const newCheckedItems = [...checkedItems];
+    newCheckedItems[index] = !newCheckedItems[index];
+    setCheckedItems(newCheckedItems);
   };
 
   const deleteItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
+    setCheckedItems(checkedItems.filter((_, i) => i !== index));
   };
 
   const addItem = async () => {
@@ -62,6 +110,7 @@ const ListViewScreen = () => {
 
       // Update the local state with the new item
       setItems([...items, newItem.trim()]);
+      setCheckedItems([...checkedItems, false]);
       setNewItem('');
       setModalVisible(false);
       setIsAdding(false);
@@ -73,7 +122,10 @@ const ListViewScreen = () => {
       <View style={styles.header}>
         <Text style={styles.title}>{listName}</Text>
       </View>
-      <Text style={styles.loginPrompt}>Login to enable all features</Text>
+      {!isLoggedIn && (
+        <Text style={styles.loginPrompt}>Login to enable all features</Text>
+      )}
+      {isLoggedIn && <View style={styles.loggedInSpacer} />}
       <Button
         mode="contained"
         style={styles.searchButton}
@@ -87,7 +139,14 @@ const ListViewScreen = () => {
         data={items}
         renderItem={({ item, index }) => (
           <View style={styles.itemContainer}>
-            <Text style={styles.itemText}>{item}</Text>
+            <View style={styles.itemLeftSection}>
+              <Checkbox
+                status={checkedItems[index] ? 'checked' : 'unchecked'}
+                onPress={() => toggleItemCheck(index)}
+                color="#FF6F61"
+              />
+              <Text style={[styles.itemText, checkedItems[index] && styles.checkedItemText]}>{item}</Text>
+            </View>
             <View style={styles.iconContainer}>
               <IconButton
                 icon="pencil"
@@ -116,13 +175,15 @@ const ListViewScreen = () => {
       />
       {/* Bottom Section */}
       <View style={styles.bottomSection}>
-        <Button
-          mode="contained"
-          style={styles.loginButton}
-          onPress={() => navigation.navigate('Login')}
-        >
-          Login
-        </Button>
+        {!isLoggedIn && (
+          <Button
+            mode="contained"
+            style={styles.loginButton}
+            onPress={() => navigation.navigate('Login')}
+          >
+            Login
+          </Button>
+        )}
         <View style={styles.bottomButtons}>
           <Button
             mode="contained"
@@ -163,6 +224,31 @@ const ListViewScreen = () => {
               Add Item
             </Button>
             <Button mode="contained" onPress={() => setModalVisible(false)} style={styles.modalButton}>
+              Cancel
+            </Button>
+          </View>
+        </View>
+      </Modal>
+      {/* Modal for Editing Item */}
+      <Modal
+        visible={editModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Edit Item</Text>
+            <TextInput
+              label="Item Name"
+              value={editingItem.text}
+              onChangeText={(text) => setEditingItem({ ...editingItem, text })}
+              style={styles.textInput}
+            />
+            <Button mode="contained" onPress={saveEditedItem} style={styles.modalButton}>
+              Save Changes
+            </Button>
+            <Button mode="contained" onPress={() => setEditModalVisible(false)} style={styles.modalButton}>
               Cancel
             </Button>
           </View>
@@ -215,8 +301,18 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     marginHorizontal: 16,
   },
+  itemLeftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   itemText: {
     fontSize: 16,
+    marginLeft: 10,
+  },
+  checkedItemText: {
+    textDecorationLine: 'line-through',
+    color: '#888',
   },
   iconContainer: {
     flexDirection: 'row',
@@ -265,6 +361,9 @@ const styles = StyleSheet.create({
   modalButton: {
     marginVertical: 5,
     backgroundColor: '#FF6F61'
+  },
+  loggedInSpacer: {
+    height: 30,
   },
 });
 
