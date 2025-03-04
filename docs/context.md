@@ -198,7 +198,7 @@
 ## Vendor Flow 🏪
 
 ### 1. Vendor Dashboard
-- Store list with inventory counts
+- Store list 
 - `Add Store` button → Navigates to Store Creation
 
 ### 2. Store Management

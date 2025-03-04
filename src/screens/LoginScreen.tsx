@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, LayoutChangeEvent } from 'react-native';
-import { TextInput, Button, Menu, Divider, Provider } from 'react-native-paper';
+import { View, Text, StyleSheet } from 'react-native';
+import { TextInput, Button, Provider } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -10,17 +10,8 @@ type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'
 
 const LoginScreen = () => {
   const navigation = useNavigation<LoginScreenNavigationProp>();
-  const [userType, setUserType] = useState('Customer'); // default is Customer
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [anchorCoordinates, setAnchorCoordinates] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // Capture the layout of the wrapper view to position the Menu.
-  const handleLayout = (event: LayoutChangeEvent) => {
-    const { x, y, height } = event.nativeEvent.layout;
-    setAnchorCoordinates({ x: x, y: y + height });
-  };
 
   const handleLogin = async () => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -31,8 +22,21 @@ const LoginScreen = () => {
     if (error) {
       alert(error.message);
     } else {
-      alert('Logged in successfully!');
-      navigation.navigate('Dashboard');
+      // Fetch user profile to check user type
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user) {
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', userData.user.id)
+          .single();
+
+        if (profileData?.user_type === 'Vendor') {
+          navigation.navigate('VendorDashboard');
+        } else {
+          navigation.navigate('Dashboard');
+        }
+      }
     }
   };
 
@@ -57,40 +61,7 @@ const LoginScreen = () => {
             style={styles.input}
           />
 
-          {/* Wrapper for the User Type dropdown */}
-          <View style={styles.input} onLayout={handleLayout}>
-            <TouchableOpacity onPress={() => setMenuVisible(true)}>
-              <TextInput
-                label="User Type"
-                mode="outlined"
-                value={userType}
-                editable={false}
-                pointerEvents="none" // Prevent interaction with the TextInput directly
-                right={<TextInput.Icon icon="menu-down" />}
-              />
-            </TouchableOpacity>
-            <Menu
-              visible={menuVisible}
-              onDismiss={() => setMenuVisible(false)}
-              anchor={anchorCoordinates}
-            >
-              <Menu.Item
-                onPress={() => {
-                  setUserType('Customer');
-                  setMenuVisible(false);
-                }}
-                title="Customer"
-              />
-              <Divider />
-              <Menu.Item
-                onPress={() => {
-                  setUserType('Vendor');
-                  setMenuVisible(false);
-                }}
-                title="Vendor"
-              />
-            </Menu>
-          </View>
+
 
           <Button mode="contained" onPress={handleLogin} style={styles.button}>
             Login

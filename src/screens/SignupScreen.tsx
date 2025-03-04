@@ -23,24 +23,27 @@ const SignupScreen = () => {
   };
 
   const handleSignup = async () => {
-    const { user, error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
     });
 
     if (error) {
       Alert.alert('Error', error.message || 'An unknown error occurred.');
-    } else if (user) {
-      // Create a profile for the new user
+    } else if (data?.user) {
+      // Create a profile for the new user with the selected user type
       const { error: profileError } = await supabase
         .from('profiles')
-        .insert([{ id: user.id, name, email }]);
+        .insert([{ id: data.user.id, name, email, user_type: userType }]);
 
       if (profileError) {
         Alert.alert('Error', profileError.message || 'An unknown error occurred while creating profile.');
       } else {
-        Alert.alert('Success', 'Account created successfully!');
-        navigation.navigate('Login'); // Navigate to the Login screen
+        Alert.alert(
+          'Success',
+          'Account created successfully!',
+          [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+        );
       }
     }
   };
@@ -176,4 +179,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SignupScreen; 
+export default SignupScreen;

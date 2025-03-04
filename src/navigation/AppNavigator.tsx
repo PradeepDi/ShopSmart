@@ -6,6 +6,9 @@ import CreateListScreen from '../screens/CreateListScreen';
 import ListViewScreen from '../screens/ListViewScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import { VendorDashboardScreen } from '../screens/VendorDashboardScreen';
+import { StoreCreationScreen } from '../screens/StoreCreationScreen';
+import { StoreManagementScreen } from '../screens/StoreManagementScreen';
 // Import other screens as needed
 
 export type RootStackParamList = {
@@ -16,6 +19,9 @@ export type RootStackParamList = {
   Signup: undefined;
   Dashboard: undefined;
   Profile: undefined;
+  VendorDashboard: undefined;
+  StoreCreation: undefined;
+  StoreManagement: { storeId: string };
   // Add other routes here as needed
 };
 
@@ -30,6 +36,9 @@ export const AppNavigator = () => (
     <Stack.Screen name="Signup" component={SignupScreen} />
     <Stack.Screen name="Dashboard" component={DashboardScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
+    <Stack.Screen name="VendorDashboard" component={VendorDashboardScreen} />
+    <Stack.Screen name="StoreCreation" component={StoreCreationScreen} />
+    <Stack.Screen name="StoreManagement" component={StoreManagementScreen} />
     {/* Add other screens here */}
   </Stack.Navigator>
-); 
+);
