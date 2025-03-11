@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator } from 'react-native';
-import { TextInput, Button, IconButton, Chip } from 'react-native-paper';
+import { TextInput, Button, IconButton, Chip, HelperText } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -8,23 +8,43 @@ import { supabase } from '../../supabaseClient';
 
 type CreateListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreateList'>;
 
+// Define an interface for item structure with name and quantity
+interface ListItem {
+  name: string;
+  quantity: number;
+}
+
 const CreateListScreen = () => {
   const navigation = useNavigation<CreateListScreenNavigationProp>();
   const [listName, setListName] = useState('');
-  const [items, setItems] = useState<string[]>([]);
+  const [items, setItems] = useState<ListItem[]>([]);
   const [itemName, setItemName] = useState('');
+  const [itemQuantity, setItemQuantity] = useState('1'); // Default quantity is 1
   const [isCreating, setIsCreating] = useState(false); // Guard to prevent duplicate submissions
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null means loading state
 
   const addItem = () => {
     if (itemName.trim()) {
-      setItems([...items, itemName]);
+      // Convert quantity to number, default to 1 if invalid
+      const quantity = parseInt(itemQuantity) || 1;
+      
+      // Add new item with name and quantity
+      setItems([...items, { name: itemName.trim(), quantity }]);
+      
+      // Reset input fields
       setItemName('');
+      setItemQuantity('1');
     }
   };
 
   const removeItem = (index: number) => {
     setItems(items.filter((_, i) => i !== index));
+  };
+  
+  // Function to validate quantity input
+  const isQuantityValid = () => {
+    const quantity = parseInt(itemQuantity);
+    return !isNaN(quantity) && quantity > 0;
   };
 
   // Check user authentication status when component mounts
@@ -72,8 +92,12 @@ const CreateListScreen = () => {
 
     const listId = listData[0].id;
 
-    // Save items to the database with the list ID
-    const itemInserts = items.map(item => ({ name: item, list_id: listId }));
+    // Save items to the database with the list ID and quantity
+    const itemInserts = items.map(item => ({ 
+      name: item.name, 
+      quantity: item.quantity, 
+      list_id: listId 
+    }));
     const { error: itemsError } = await supabase
       .from('items')
       .insert(itemInserts);
@@ -127,19 +151,44 @@ const CreateListScreen = () => {
           onChangeText={setListName}
           style={styles.input}
         />
-        <TextInput
-          label="Add Item"
-          mode="outlined"
-          value={itemName}
-          onChangeText={setItemName}
-          style={styles.input}
-          right={<TextInput.Icon icon="plus" onPress={addItem} />}
-        />
+        <View style={styles.inputRow}>
+          <TextInput
+            label="Add Item"
+            mode="outlined"
+            value={itemName}
+            onChangeText={setItemName}
+            style={styles.itemNameInput}
+          />
+          <TextInput
+            label="Qty"
+            mode="outlined"
+            value={itemQuantity}
+            onChangeText={setItemQuantity}
+            keyboardType="numeric"
+            style={styles.quantityInput}
+            error={!isQuantityValid() && itemQuantity !== ''}
+          />
+          <IconButton
+            icon="plus"
+            size={24}
+            onPress={addItem}
+            disabled={!itemName.trim() || !isQuantityValid()}
+            style={styles.addButton}
+          />
+        </View>
+        {!isQuantityValid() && itemQuantity !== '' && (
+          <HelperText type="error" style={styles.errorText}>
+            Quantity must be a positive number
+          </HelperText>
+        )}
         <FlatList
           data={items}
           renderItem={({ item, index }) => (
             <View style={styles.itemContainer}>
-              <Text style={styles.itemText}>{item}</Text>
+              <View style={styles.itemInfo}>
+                <Text style={styles.itemText}>{item.name}</Text>
+                <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
+              </View>
               <IconButton
                 icon="delete"
                 size={20}
@@ -229,6 +278,29 @@ const styles = StyleSheet.create({
     width: '80%',
     marginVertical: 10,
   },
+  inputRow: {
+    flexDirection: 'row',
+    width: '80%',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  itemNameInput: {
+    flex: 3,
+    marginRight: 8,
+  },
+  quantityInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  addButton: {
+    backgroundColor: '#FF6F61',
+    borderRadius: 5,
+  },
+  errorText: {
+    width: '80%',
+    marginTop: -5,
+  },
   list: {
     width: '80%',
   },
@@ -248,8 +320,20 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     width: '100%',
   },
+  itemInfo: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   itemText: {
     fontSize: 16,
+    flex: 3,
+  },
+  quantityText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 10,
+    flex: 1,
   },
 });
 

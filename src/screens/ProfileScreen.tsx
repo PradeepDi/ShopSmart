@@ -11,7 +11,7 @@ const ProfileScreen = () => {
   const navigation = useNavigation();
   const [userName, setUserName] = useState('Loading...');
   const [userEmail, setUserEmail] = useState('Loading...');
-  const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150.png');
+  const [profileImage, setProfileImage] = useState(require('../../assets/profile.png'));
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -35,8 +35,8 @@ const ProfileScreen = () => {
       } else if (data && data.length === 1) {
         setUserName(data[0].name);
         setUserEmail(data[0].email);
-        // Use avatar_url if it exists, otherwise use default image
-        if (data[0].avatar_url) {
+        // Use avatar_url if it exists and is not empty, otherwise keep the default image
+        if (data[0].avatar_url && data[0].avatar_url.trim() !== '') {
           setProfileImage(data[0].avatar_url);
         }
       } else {
@@ -255,7 +255,7 @@ const ProfileScreen = () => {
   return (
     <View style={styles.container}>
       <Image
-        source={{ uri: profileImage }}
+        source={typeof profileImage === 'string' ? { uri: profileImage } : profileImage}
         style={styles.profileImage}
       />
       <Button

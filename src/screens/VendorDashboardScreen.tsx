@@ -16,17 +16,54 @@ interface Store {
 export const VendorDashboardScreen = () => {
   const navigation = useNavigation();
   const [stores, setStores] = useState<Store[]>([]);
+  const [profileImage, setProfileImage] = useState(require('../../assets/profile.png'));
+  const [isProfileImageUrl, setIsProfileImageUrl] = useState(false);
 
   useEffect(() => {
     fetchStores();
+    fetchUserProfile();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
       fetchStores();
+      fetchUserProfile();
       return () => {};
     }, [])
   );
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData?.user) {
+        console.error('Error fetching user:', userError);
+        return;
+      }
+
+      const userId = userData.user.id;
+
+      // Fetch user profile information from the database
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+      } else if (data && data.length === 1) {
+        if (data[0].avatar_url && data[0].avatar_url.trim() !== '') {
+          setProfileImage(data[0].avatar_url);
+          setIsProfileImageUrl(true);
+        } else {
+          setProfileImage(require('../../assets/profile.png'));
+          setIsProfileImageUrl(false);
+        }
+      }
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+    }
+  };
 
   const fetchStores = async () => {
     try {
@@ -62,7 +99,7 @@ export const VendorDashboardScreen = () => {
           onPress={() => navigation.navigate('Profile' as never)}
         >
           <Image
-            source={{ uri: 'https://via.placeholder.com/50' }}
+            source={isProfileImageUrl ? { uri: profileImage } : profileImage}
             style={styles.profileIcon}
           />
         </TouchableOpacity>

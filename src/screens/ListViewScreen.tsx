@@ -9,19 +9,26 @@ import { supabase } from '../../supabaseClient'; // Adjust the path as necessary
 type ListViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ListView'>;
 type ListViewScreenRouteProp = RouteProp<RootStackParamList, 'ListView'>;
 
+// Define an interface for item structure with name and quantity
+interface ListItem {
+  id: number;
+  name: string;
+  quantity: number;
+  is_checked: boolean;
+}
+
 const ListViewScreen = () => {
   const navigation = useNavigation<ListViewScreenNavigationProp>();
   const route = useRoute<ListViewScreenRouteProp>();
   const { listId, listName } = route.params || { listId: null, listName: 'Default List' };
-  const [items, setItems] = useState<string[]>([]);
-  const [checkedItems, setCheckedItems] = useState<boolean[]>([]);
-  const [itemIds, setItemIds] = useState<number[]>([]); // Store item IDs for database operations
+  const [items, setItems] = useState<ListItem[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [newItem, setNewItem] = useState('');
+  const [newItemQuantity, setNewItemQuantity] = useState('1'); // Default quantity is 1
   const [isAdding, setIsAdding] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // Track authentication status
   const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState({ index: -1, text: '' });
+  const [editingItem, setEditingItem] = useState({ index: -1, text: '', quantity: '1' });
 
   // Check user authentication status when component mounts
   useEffect(() => {
@@ -37,20 +44,20 @@ const ListViewScreen = () => {
     const fetchItems = async () => {
       const { data, error } = await supabase
         .from('items') // Assuming you have an 'items' table
-        .select('id, name, is_checked')
+        .select('id, name, quantity, is_checked')
         .eq('list_id', listId);
 
       if (error) {
         console.error(error);
       } else {
-        const itemNames = data.map((item: { name: string, id: number, is_checked: boolean }) => item.name);
-        setItems(itemNames);
-        // Use the is_checked value from the database or default to false if not present
-        const checkedStatus = data.map((item: { is_checked: boolean }) => item.is_checked || false);
-        setCheckedItems(checkedStatus);
-        
-        // Store the item IDs for database operations
-        setItemIds(data.map((item: { id: number }) => item.id));
+        // Transform the data to match our ListItem interface
+        const formattedItems = data.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity || 1, // Default to 1 if quantity is not present
+          is_checked: item.is_checked || false
+        }));
+        setItems(formattedItems);
       }
     };
 
@@ -60,19 +67,27 @@ const ListViewScreen = () => {
   }, [listId]);
 
   const editItem = (index: number) => {
-    setEditingItem({ index, text: items[index] });
+    const item = items[index];
+    setEditingItem({ 
+      index, 
+      text: item.name,
+      quantity: item.quantity.toString()
+    });
     setEditModalVisible(true);
   };
 
   const saveEditedItem = async () => {
     if (editingItem.text.trim() && editingItem.index !== -1) {
+      const quantity = parseInt(editingItem.quantity) || 1;
+      
       // Update the item in the database
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('items')
-        .update({ name: editingItem.text.trim() })
-        .eq('list_id', listId)
-        .eq('name', items[editingItem.index])
-        .select();
+        .update({ 
+          name: editingItem.text.trim(),
+          quantity: quantity
+        })
+        .eq('id', items[editingItem.index].id);
 
       if (error) {
         console.error('Error updating item:', error);
@@ -81,58 +96,76 @@ const ListViewScreen = () => {
 
       // Update the local state
       const updatedItems = [...items];
-      updatedItems[editingItem.index] = editingItem.text.trim();
+      updatedItems[editingItem.index] = {
+        ...updatedItems[editingItem.index],
+        name: editingItem.text.trim(),
+        quantity: quantity
+      };
       setItems(updatedItems);
       setEditModalVisible(false);
-      setEditingItem({ index: -1, text: '' });
+      setEditingItem({ index: -1, text: '', quantity: '1' });
     }
   };
 
   const toggleItemCheck = async (index: number) => {
-    const newCheckedItems = [...checkedItems];
-    newCheckedItems[index] = !newCheckedItems[index];
-    setCheckedItems(newCheckedItems);
+    const item = items[index];
+    const newCheckedStatus = !item.is_checked;
     
     // Save the checked status to the database if user is logged in
-    if (isLoggedIn && itemIds[index]) {
+    if (isLoggedIn) {
       const { error } = await supabase
         .from('items')
-        .update({ is_checked: newCheckedItems[index] })
-        .eq('id', itemIds[index]);
+        .update({ is_checked: newCheckedStatus })
+        .eq('id', item.id);
       
       if (error) {
         console.error('Error updating item check status:', error);
-      }
-    }
-  };
-
-  const deleteItem = async (index: number) => {
-    // Delete the item from the database if we have its ID
-    if (itemIds[index]) {
-      const { error } = await supabase
-        .from('items')
-        .delete()
-        .eq('id', itemIds[index]);
-      
-      if (error) {
-        console.error('Error deleting item:', error);
         return;
       }
     }
     
     // Update local state
+    const updatedItems = [...items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      is_checked: newCheckedStatus
+    };
+    setItems(updatedItems);
+  };
+
+  const deleteItem = async (index: number) => {
+    const itemId = items[index].id;
+    
+    // Delete the item from the database
+    const { error } = await supabase
+      .from('items')
+      .delete()
+      .eq('id', itemId);
+    
+    if (error) {
+      console.error('Error deleting item:', error);
+      return;
+    }
+    
+    // Update local state
     setItems(items.filter((_, i) => i !== index));
-    setCheckedItems(checkedItems.filter((_, i) => i !== index));
-    setItemIds(itemIds.filter((_, i) => i !== index));
   };
 
   const addItem = async () => {
     if (newItem.trim() && !isAdding) {
       setIsAdding(true);
+      
+      // Convert quantity to number, default to 1 if invalid
+      const quantity = parseInt(newItemQuantity) || 1;
+      
       // Insert the new item into the database
       const { data, error } = await supabase
         .from('items')
-        .insert([{ name: newItem.trim(), list_id: listId }])
+        .insert([{ 
+          name: newItem.trim(), 
+          list_id: listId,
+          quantity: quantity
+        }])
         .select();
 
       if (error) {
@@ -142,12 +175,26 @@ const ListViewScreen = () => {
       }
 
       // Update the local state with the new item
-      setItems([...items, newItem.trim()]);
-      setCheckedItems([...checkedItems, false]);
+      if (data && data.length > 0) {
+        setItems([...items, {
+          id: data[0].id,
+          name: data[0].name,
+          quantity: data[0].quantity,
+          is_checked: false
+        }]);
+      }
+      
       setNewItem('');
+      setNewItemQuantity('1');
       setModalVisible(false);
       setIsAdding(false);
     }
+  };
+
+  // Function to validate quantity input
+  const isQuantityValid = (quantity: string) => {
+    const parsedQuantity = parseInt(quantity);
+    return !isNaN(parsedQuantity) && parsedQuantity > 0;
   };
 
   return (
@@ -174,11 +221,14 @@ const ListViewScreen = () => {
           <View style={styles.itemContainer}>
             <View style={styles.itemLeftSection}>
               <Checkbox
-                status={checkedItems[index] ? 'checked' : 'unchecked'}
+                status={item.is_checked ? 'checked' : 'unchecked'}
                 onPress={() => toggleItemCheck(index)}
                 color="#FF6F61"
               />
-              <Text style={[styles.itemText, checkedItems[index] && styles.checkedItemText]}>{item}</Text>
+              <View style={styles.itemDetails}>
+                <Text style={[styles.itemText, item.is_checked && styles.checkedItemText]}>{item.name}</Text>
+                <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
+              </View>
             </View>
             <View style={styles.iconContainer}>
               <IconButton
@@ -203,7 +253,7 @@ const ListViewScreen = () => {
             </View>
           </View>
         )}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
       />
       {/* Bottom Section */}
@@ -253,7 +303,18 @@ const ListViewScreen = () => {
               onChangeText={setNewItem}
               style={styles.textInput}
             />
-            <Button mode="contained" onPress={addItem} style={styles.modalButton}>
+            <TextInput
+              label="Quantity"
+              value={newItemQuantity}
+              onChangeText={setNewItemQuantity}
+              keyboardType="numeric"
+              style={styles.textInput}
+              error={!isQuantityValid(newItemQuantity) && newItemQuantity !== ''}
+            />
+            {!isQuantityValid(newItemQuantity) && newItemQuantity !== '' && (
+              <Text style={styles.errorText}>Quantity must be a positive number</Text>
+            )}
+            <Button mode="contained" onPress={addItem} style={styles.modalButton} disabled={!newItem.trim() || !isQuantityValid(newItemQuantity)}>
               Add Item
             </Button>
             <Button mode="contained" onPress={() => setModalVisible(false)} style={styles.modalButton}>
@@ -278,7 +339,23 @@ const ListViewScreen = () => {
               onChangeText={(text) => setEditingItem({ ...editingItem, text })}
               style={styles.textInput}
             />
-            <Button mode="contained" onPress={saveEditedItem} style={styles.modalButton}>
+            <TextInput
+              label="Quantity"
+              value={editingItem.quantity}
+              onChangeText={(quantity) => setEditingItem({ ...editingItem, quantity })}
+              keyboardType="numeric"
+              style={styles.textInput}
+              error={!isQuantityValid(editingItem.quantity) && editingItem.quantity !== ''}
+            />
+            {!isQuantityValid(editingItem.quantity) && editingItem.quantity !== '' && (
+              <Text style={styles.errorText}>Quantity must be a positive number</Text>
+            )}
+            <Button 
+              mode="contained" 
+              onPress={saveEditedItem} 
+              style={styles.modalButton}
+              disabled={!editingItem.text.trim() || !isQuantityValid(editingItem.quantity)}
+            >
               Save Changes
             </Button>
             <Button mode="contained" onPress={() => setEditModalVisible(false)} style={styles.modalButton}>
@@ -339,9 +416,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
   },
+  itemDetails: {
+    flex: 1,
+    marginLeft: 10,
+  },
   itemText: {
     fontSize: 16,
-    marginLeft: 10,
+  },
+  quantityText: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 4,
   },
   checkedItemText: {
     textDecorationLine: 'line-through',
@@ -398,6 +483,11 @@ const styles = StyleSheet.create({
   loggedInSpacer: {
     height: 30,
   },
+  errorText: {
+    color: '#B00020',
+    marginBottom: 10,
+    fontSize: 12,
+  }
 });
 
 export default ListViewScreen;

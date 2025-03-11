@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Image } from 'react-native';
 import { Button, IconButton } from 'react-native-paper';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient'; // Adjust the path as necessary
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -11,32 +11,76 @@ type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Da
 const DashboardScreen = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
   const [lists, setLists] = useState<{ id: string; name: string }[]>([]);
+  const [profileImage, setProfileImage] = useState(require('../../assets/profile.png'));
+  const [isProfileImageUrl, setIsProfileImageUrl] = useState(false);
 
   useEffect(() => {
-    const fetchLists = async () => {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+    fetchLists();
+    fetchUserProfile();
+  }, []);
 
-      if (userError) {
-        console.error(userError);
+  useFocusEffect(
+    useCallback(() => {
+      fetchLists();
+      fetchUserProfile();
+      return () => {};
+    }, [])
+  );
+
+  const fetchUserProfile = async () => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData?.user) {
+        console.error('Error fetching user:', userError);
         return;
       }
 
-      if (userData?.user) {
-        const { data, error } = await supabase
-          .from('lists') // Assuming you have a 'lists' table
-          .select('id, name')
-          .eq('user_id', userData.user.id); // Filter by the current user's ID
+      const userId = userData.user.id;
 
-        if (error) {
-          console.error(error);
+      // Fetch user profile information from the database
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', userId);
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+      } else if (data && data.length === 1) {
+        if (data[0].avatar_url && data[0].avatar_url.trim() !== '') {
+          setProfileImage(data[0].avatar_url);
+          setIsProfileImageUrl(true);
         } else {
-          setLists(data);
+          setProfileImage(require('../../assets/profile.png'));
+          setIsProfileImageUrl(false);
         }
       }
-    };
+    } catch (error) {
+      console.error('Error in fetchUserProfile:', error);
+    }
+  };
 
-    fetchLists();
-  }, []);
+  const fetchLists = async () => {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+
+    if (userError) {
+      console.error(userError);
+      return;
+    }
+
+    if (userData?.user) {
+      const { data, error } = await supabase
+        .from('lists') // Assuming you have a 'lists' table
+        .select('id, name')
+        .eq('user_id', userData.user.id); // Filter by the current user's ID
+
+      if (error) {
+        console.error(error);
+      } else {
+        setLists(data);
+      }
+    }
+  };
 
   const deleteList = async (listId: string) => {
     const { error } = await supabase
@@ -60,7 +104,7 @@ const DashboardScreen = () => {
           onPress={() => navigation.navigate('Profile')} // Navigate to Profile screen
         >
           <Image
-            source={{ uri: 'https://via.placeholder.com/50' }} // Use a placeholder image URL for testing
+            source={isProfileImageUrl ? { uri: profileImage } : profileImage}
             style={styles.profileIcon}
           />
         </TouchableOpacity>
@@ -146,4 +190,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default DashboardScreen; 
+export default DashboardScreen;
