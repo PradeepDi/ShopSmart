@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Alert } from 'react-native';
-import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextInput } from 'react-native-paper';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextInput, Portal, Dialog, Provider } from 'react-native-paper';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
 
 interface InventoryItem {
@@ -9,7 +9,7 @@ interface InventoryItem {
   item_name: string;
   price: number;
   stock_status: boolean;
-  item_id: string;
+  description?: string;
 }
 
 interface RouteParams {
@@ -26,11 +26,21 @@ export const StoreManagementScreen = () => {
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editPrice, setEditPrice] = useState('');
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
 
   useEffect(() => {
     fetchStoreDetails();
     fetchInventory();
   }, []);
+
+  // Add useFocusEffect to refresh inventory when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      fetchInventory();
+      return () => {};
+    }, [])
+  );
 
   const fetchStoreDetails = async () => {
     try {
@@ -50,15 +60,15 @@ export const StoreManagementScreen = () => {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      // Join inventory with items to get item names
+      // Get inventory items directly without joining
       const { data, error } = await supabase
         .from('inventory')
         .select(`
           id,
+          name,
           price,
           stock_status,
-          item_id,
-          items:item_id(name)
+          description
         `)
         .eq('shop_id', storeId);
 
@@ -67,10 +77,10 @@ export const StoreManagementScreen = () => {
       // Transform the data to include item_name
       const formattedData = data?.map(item => ({
         id: item.id,
-        item_name: item.items?.name || 'Unknown Item',
+        item_name: item.name || 'Unknown Item',
         price: item.price,
         stock_status: item.stock_status,
-        item_id: item.item_id
+        description: item.description
       })) || [];
       
       setInventory(formattedData);
@@ -142,65 +152,120 @@ export const StoreManagementScreen = () => {
     setEditingItem(null);
   };
 
+  const confirmDelete = (itemId: string) => {
+    setDeleteItemId(itemId);
+    setDeleteDialogVisible(true);
+  };
+
+  const handleDeleteItem = async () => {
+    if (!deleteItemId) return;
+    
+    try {
+      const { error } = await supabase
+        .from('inventory')
+        .delete()
+        .eq('id', deleteItemId);
+
+      if (error) throw error;
+      
+      // Update local state by removing the deleted item
+      setInventory(inventory.filter(item => item.id !== deleteItemId));
+      Alert.alert('Success', 'Item deleted successfully');
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      Alert.alert('Error', 'Failed to delete item');
+    } finally {
+      setDeleteDialogVisible(false);
+      setDeleteItemId(null);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <Title style={styles.title}>{storeName} - Inventory</Title>
-      
-      <ScrollView style={styles.inventoryList}>
-        {inventory.length === 0 && !loading ? (
-          <Paragraph style={styles.emptyMessage}>No items in inventory. Add some items to get started!</Paragraph>
-        ) : (
-          inventory.map((item) => (
-            <Card key={item.id} style={styles.itemCard}>
-              <Card.Content>
-                <Title>{item.item_name}</Title>
-                
-                {editingItem === item.id ? (
-                  <View style={styles.priceEditContainer}>
-                    <TextInput
-                      label="Price"
-                      value={editPrice}
-                      onChangeText={setEditPrice}
-                      keyboardType="decimal-pad"
-                      style={styles.priceInput}
-                      mode="outlined"
+    <Provider>
+      <View style={styles.container}>
+        <Title style={styles.title}>{storeName} - Inventory</Title>
+        
+        <ScrollView style={styles.inventoryList}>
+          {inventory.length === 0 && !loading ? (
+            <Paragraph style={styles.emptyMessage}>No items in inventory. Add some items to get started!</Paragraph>
+          ) : (
+            inventory.map((item) => (
+              <Card key={item.id} style={styles.itemCard}>
+                <Card.Content>
+                  <Title>{item.item_name}</Title>
+                  
+                  {editingItem === item.id ? (
+                    <View style={styles.priceEditContainer}>
+                      <TextInput
+                        label="Price"
+                        value={editPrice}
+                        onChangeText={setEditPrice}
+                        keyboardType="decimal-pad"
+                        style={styles.priceInput}
+                        mode="outlined"
+                      />
+                      <IconButton icon="check" onPress={() => savePrice(item.id)} />
+                      <IconButton icon="close" onPress={cancelEditing} />
+                    </View>
+                  ) : (
+                    <View style={styles.priceContainer}>
+                      <Paragraph>Price: Rs. {item.price.toFixed(2)}</Paragraph>
+                      <IconButton 
+                        icon="pencil" 
+                        size={20} 
+                        onPress={() => startEditingPrice(item.id, item.price)} 
+                      />
+                    </View>
+                  )}
+                  
+                  <Divider style={styles.divider} />
+                  
+                  <View style={styles.stockContainer}>
+                    <Paragraph>In Stock</Paragraph>
+                    <Switch 
+                      value={item.stock_status} 
+                      onValueChange={() => toggleStockStatus(item.id, item.stock_status)}
                     />
-                    <IconButton icon="check" onPress={() => savePrice(item.id)} />
-                    <IconButton icon="close" onPress={cancelEditing} />
                   </View>
-                ) : (
-                  <View style={styles.priceContainer}>
-                    <Paragraph>Price: ${item.price.toFixed(2)}</Paragraph>
+                  
+                  <View style={styles.actionContainer}>
                     <IconButton 
-                      icon="pencil" 
+                      icon="delete" 
+                      color="#FF5252"
                       size={20} 
-                      onPress={() => startEditingPrice(item.id, item.price)} 
+                      onPress={() => confirmDelete(item.id)} 
                     />
                   </View>
-                )}
-                
-                <Divider style={styles.divider} />
-                
-                <View style={styles.stockContainer}>
-                  <Paragraph>In Stock</Paragraph>
-                  <Switch 
-                    value={item.stock_status} 
-                    onValueChange={() => toggleStockStatus(item.id, item.stock_status)}
-                  />
-                </View>
-              </Card.Content>
-            </Card>
-          ))
-        )}
-      </ScrollView>
-      
-      <FAB
-        style={styles.fab}
-        icon="plus"
-        label="Add Item"
-        onPress={handleAddItem}
-      />
-    </View>
+                </Card.Content>
+              </Card>
+            ))
+          )}
+        </ScrollView>
+        
+        <FAB
+          style={styles.fab}
+          icon="plus"
+          label="Add Item"
+          onPress={handleAddItem}
+        />
+        
+        <Portal>
+          <Dialog
+            visible={deleteDialogVisible}
+            onDismiss={() => setDeleteDialogVisible(false)}
+          >
+            <Dialog.Title>Delete Item</Dialog.Title>
+            <Dialog.Content>
+              <Paragraph>Are you sure you want to delete this item? This action cannot be undone.</Paragraph>
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
+              <Button onPress={handleDeleteItem} color="#FF5252">Delete</Button>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+      </View>
+    </Provider>
   );
 };
 
@@ -243,6 +308,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 8,
   },
   emptyMessage: {
     textAlign: 'center',

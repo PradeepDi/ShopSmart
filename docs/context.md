@@ -45,9 +45,10 @@
 - **Inventory**
   - `id` (UUID, Primary Key)
   - `shop_id` (UUID, Foreign Key to Shops)
-  - `item_id` (UUID, Foreign Key to Items)
+  - `name` (String)
   - `price` (Decimal)
   - `stock_status` (Boolean)
+  - `description` (String)
   - `updated_at` (Timestamp)
 
 ---
@@ -224,10 +225,10 @@
 
 ## Feature Matrix 📊
 
-| Customers ✅                | Vendors 🏭                |
+| Customers ✅               | Vendors 🏭                |
 |----------------------------|---------------------------|
 | Price comparisons          | Multi-store management    |
 | Image-based search         | Real-time inventory       |
 | Parking location maps      | Item updates              |
-| List sharing/export        |             |
+| List sharing/export        |                           |
 | Shop distance sorting      |                           |
