@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
 import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextInput, Portal, Dialog, Provider } from 'react-native-paper';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
@@ -183,7 +183,9 @@ export const StoreManagementScreen = () => {
   return (
     <Provider>
       <View style={styles.container}>
-        <Title style={styles.title}>{storeName} - Inventory</Title>
+        <View style={styles.header}>
+          <Text style={styles.title}>{storeName} - Inventory</Text>
+        </View>
         
         <ScrollView style={styles.inventoryList}>
           {inventory.length === 0 && !loading ? (
@@ -247,6 +249,8 @@ export const StoreManagementScreen = () => {
           icon="plus"
           label="Add Item"
           onPress={handleAddItem}
+          color="white"
+          backgroundColor="#FF6F61"
         />
         
         <Portal>
@@ -272,12 +276,20 @@ export const StoreManagementScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FAF3F3',
+  },
+  header: {
+    backgroundColor: '#FF6F61',
+    width: '100%',
+    paddingVertical: 60,
+    paddingHorizontal: 16,
+    borderBottomLeftRadius: 50,
+    borderBottomRightRadius: 50,
   },
   title: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 16,
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#fff',
   },
   inventoryList: {
     flex: 1,
@@ -285,6 +297,8 @@ const styles = StyleSheet.create({
   },
   itemCard: {
     marginBottom: 16,
+    backgroundColor: '#fff',
+    borderRadius: 8,
   },
   divider: {
     marginVertical: 8,
@@ -325,5 +339,6 @@ const styles = StyleSheet.create({
     margin: 16,
     right: 0,
     bottom: 0,
+    backgroundColor: '#FF6F61',
   },
 });

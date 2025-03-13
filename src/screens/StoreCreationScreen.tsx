@@ -97,7 +97,7 @@ export const StoreCreationScreen = () => {
           />
           
           <TextInput
-            label="Map Link (Optional)"
+            label="Map Link"
             value={mapLink}
             onChangeText={setMapLink}
             style={styles.input}
