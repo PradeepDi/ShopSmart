@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Text } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Text, Image } from 'react-native';
 import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextInput, Portal, Dialog, Provider } from 'react-native-paper';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
@@ -10,6 +10,7 @@ interface InventoryItem {
   price: number;
   stock_status: boolean;
   description?: string;
+  image_url?: string;
 }
 
 interface RouteParams {
@@ -68,7 +69,8 @@ export const StoreManagementScreen = () => {
           name,
           price,
           stock_status,
-          description
+          description,
+          image_url
         `)
         .eq('shop_id', storeId);
 
@@ -80,7 +82,8 @@ export const StoreManagementScreen = () => {
         item_name: item.name || 'Unknown Item',
         price: item.price,
         stock_status: item.stock_status,
-        description: item.description
+        description: item.description,
+        image_url: item.image_url
       })) || [];
       
       setInventory(formattedData);
@@ -194,49 +197,57 @@ export const StoreManagementScreen = () => {
             inventory.map((item) => (
               <Card key={item.id} style={styles.itemCard}>
                 <Card.Content>
-                  <Title>{item.item_name}</Title>
-                  
-                  {editingItem === item.id ? (
-                    <View style={styles.priceEditContainer}>
-                      <TextInput
-                        label="Price"
-                        value={editPrice}
-                        onChangeText={setEditPrice}
-                        keyboardType="decimal-pad"
-                        style={styles.priceInput}
-                        mode="outlined"
-                      />
-                      <IconButton icon="check" onPress={() => savePrice(item.id)} />
-                      <IconButton icon="close" onPress={cancelEditing} />
-                    </View>
-                  ) : (
-                    <View style={styles.priceContainer}>
-                      <Paragraph>Price: Rs. {item.price.toFixed(2)}</Paragraph>
-                      <IconButton 
-                        icon="pencil" 
-                        size={20} 
-                        onPress={() => startEditingPrice(item.id, item.price)} 
-                      />
-                    </View>
-                  )}
-                  
-                  <Divider style={styles.divider} />
-                  
-                  <View style={styles.stockContainer}>
-                    <Paragraph>In Stock</Paragraph>
-                    <Switch 
-                      value={item.stock_status} 
-                      onValueChange={() => toggleStockStatus(item.id, item.stock_status)}
+                  <View style={styles.itemContainer}>
+                    <Image 
+                      source={item.image_url ? { uri: item.image_url } : require('../../assets/product-default.png')} 
+                      style={styles.itemImage} 
                     />
-                  </View>
-                  
-                  <View style={styles.actionContainer}>
-                    <IconButton 
-                      icon="delete" 
-                      color="#FF5252"
-                      size={20} 
-                      onPress={() => confirmDelete(item.id)} 
-                    />
+                    <View style={styles.itemDetails}>
+                      <Title>{item.item_name}</Title>
+                      
+                      {editingItem === item.id ? (
+                        <View style={styles.priceEditContainer}>
+                          <TextInput
+                            label="Price"
+                            value={editPrice}
+                            onChangeText={setEditPrice}
+                            keyboardType="decimal-pad"
+                            style={styles.priceInput}
+                            mode="outlined"
+                          />
+                          <IconButton icon="check" onPress={() => savePrice(item.id)} />
+                          <IconButton icon="close" onPress={cancelEditing} />
+                        </View>
+                      ) : (
+                        <View style={styles.priceContainer}>
+                          <Paragraph>Price: Rs. {item.price.toFixed(2)}</Paragraph>
+                          <IconButton 
+                            icon="pencil" 
+                            size={20} 
+                            onPress={() => startEditingPrice(item.id, item.price)} 
+                          />
+                        </View>
+                      )}
+                      
+                      <Divider style={styles.divider} />
+                      
+                      <View style={styles.stockContainer}>
+                        <Paragraph>In Stock</Paragraph>
+                        <Switch 
+                          value={item.stock_status} 
+                          onValueChange={() => toggleStockStatus(item.id, item.stock_status)}
+                        />
+                      </View>
+                      
+                      <View style={styles.actionContainer}>
+                        <IconButton 
+                          icon="delete" 
+                          color="#FF5252"
+                          size={20} 
+                          onPress={() => confirmDelete(item.id)} 
+                        />
+                      </View>
+                    </View>
                   </View>
                 </Card.Content>
               </Card>
@@ -299,6 +310,19 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: '#fff',
     borderRadius: 8,
+  },
+  itemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  itemImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 16,
+  },
+  itemDetails: {
+    flex: 1,
   },
   divider: {
     marginVertical: 8,
