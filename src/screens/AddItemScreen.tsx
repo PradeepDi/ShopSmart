@@ -303,10 +303,10 @@ export const AddItemScreen = () => {
             label="Item Description"
             value={description}
             onChangeText={setDescription}
-            style={styles.input}
+            style={[styles.input, styles.descriptionInput]}
             mode="outlined"
             multiline
-            numberOfLines={3}
+            numberOfLines={5}
           />
           
           <View style={styles.stockContainer}>
@@ -388,6 +388,10 @@ const styles = StyleSheet.create({
   input: {
     width: '80%',
     marginVertical: 10,
+  },
+  descriptionInput: {
+    minHeight: 120,
+    textAlignVertical: 'top',
   },
   stockContainer: {
     flexDirection: 'row',

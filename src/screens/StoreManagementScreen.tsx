@@ -203,7 +203,7 @@ export const StoreManagementScreen = () => {
                       style={styles.itemImage} 
                     />
                     <View style={styles.itemDetails}>
-                      <Title>{item.item_name}</Title>
+                      <Title style={styles.itemTitle} onPress={() => navigation.navigate('ViewItem', { item })}>{item.item_name}</Title>
                       
                       {editingItem === item.id ? (
                         <View style={styles.priceEditContainer}>
@@ -240,6 +240,14 @@ export const StoreManagementScreen = () => {
                       </View>
                       
                       <View style={styles.actionContainer}>
+                        <Button 
+                          mode="outlined" 
+                          onPress={() => navigation.navigate('ViewItem', { item })}
+                          style={styles.viewButton}
+                          textColor="#FF6F61"
+                        >
+                          View Details
+                        </Button>
                         <IconButton 
                           icon="delete" 
                           color="#FF5252"
@@ -324,6 +332,12 @@ const styles = StyleSheet.create({
   itemDetails: {
     flex: 1,
   },
+  itemTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 4,
+    color: '#333',
+  },
   divider: {
     marginVertical: 8,
   },
@@ -349,8 +363,14 @@ const styles = StyleSheet.create({
   },
   actionContainer: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginTop: 8,
+  },
+  viewButton: {
+    flex: 1,
+    marginRight: 8,
+    borderColor: '#FF6F61',
   },
   emptyMessage: {
     textAlign: 'center',
