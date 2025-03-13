@@ -11,6 +11,7 @@ import { StoreCreationScreen } from '../screens/StoreCreationScreen';
 import { StoreManagementScreen } from '../screens/StoreManagementScreen';
 import AddItemScreen from '../screens/AddItemScreen';
 import { ViewItemScreen } from '../screens/ViewItemScreen';
+import PickItemScreen from '../screens/PickItemScreen';
 // Import other screens as needed
 
 export type RootStackParamList = {
@@ -26,6 +27,7 @@ export type RootStackParamList = {
   StoreManagement: { storeId: string };
   AddInventoryItem: { storeId: string };
   ViewItem: { item: { id: string; item_name: string; price: number; stock_status: boolean; description?: string; image_url?: string; } };
+  PickItem: { itemName: string };
   // Add other routes here as needed
 };
 
@@ -45,6 +47,7 @@ export const AppNavigator = () => (
     <Stack.Screen name="StoreManagement" component={StoreManagementScreen} />
     <Stack.Screen name="AddInventoryItem" component={AddItemScreen} />
     <Stack.Screen name="ViewItem" component={ViewItemScreen} />
+    <Stack.Screen name="PickItem" component={PickItemScreen} />
     {/* Add other screens here */}
   </Stack.Navigator>
 );

@@ -16,12 +16,13 @@ interface RouteParams {
     description?: string;
     image_url?: string;
   };
+  fromPickItem?: boolean;
 }
 
 export const ViewItemScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
-  const { item } = route.params as RouteParams;
+  const { item, fromPickItem = false } = route.params as RouteParams;
 
   // State for editable fields
   const [isEditing, setIsEditing] = useState(false);
@@ -371,7 +372,7 @@ export const ViewItemScreen = () => {
               <Button
                 mode="contained"
                 onPress={() => setIsEditing(true)}
-                style={styles.updateButton}
+                style={[styles.updateButton, fromPickItem && { display: 'none' }]}
                 buttonColor="#FF6F61"
               >
                 Update Item
@@ -383,7 +384,7 @@ export const ViewItemScreen = () => {
                 style={styles.backButton}
                 textColor="#FF6F61"
               >
-                Back to Inventory
+                {fromPickItem ? 'Back' : 'Back to Inventory'}
               </Button>
             </>
           )}

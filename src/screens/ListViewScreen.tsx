@@ -244,11 +244,11 @@ const ListViewScreen = () => {
               <Button
                 mode="text"
                 onPress={() => {
-                  // Handle view shops logic
+                  navigation.navigate('PickItem', { itemName: item.name });
                 }}
                 style={styles.viewShopsButton}
               >
-                View Shops
+                View Items
               </Button>
             </View>
           </View>
