@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Text, Image, Platform } from 'react-native';
-import { Button, TextInput, Switch, HelperText } from 'react-native-paper';
+import React, { useState, useRef } from 'react';
+import { View, StyleSheet, ScrollView, Alert, Text, Image, Platform, TouchableOpacity } from 'react-native';
+import { Button, TextInput, Switch, HelperText, IconButton } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
+import { CameraView, CameraType, Camera } from 'expo-camera';
 
 interface RouteParams {
   storeId: string;
@@ -13,6 +14,7 @@ interface RouteParams {
 
 export const AddItemScreen = () => {
   const navigation = useNavigation();
+  console.log('Navigation object:', navigation); // Debugging line
   const route = useRoute();
   const { storeId } = route.params as RouteParams;
 
@@ -24,6 +26,11 @@ export const AddItemScreen = () => {
   const [nameError, setNameError] = useState('');
   const [priceError, setPriceError] = useState('');
   const [itemImage, setItemImage] = useState(require('../../assets/product-default.png'));
+  
+  // Camera related states
+  const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+const cameraRef = useRef<CameraView>(null);
 
   const validateInputs = () => {
     let isValid = true;
@@ -247,7 +254,13 @@ export const AddItemScreen = () => {
       if (inventoryError) throw inventoryError;
 
       Alert.alert('Success', 'Item added to inventory successfully');
-      navigation.goBack();
+      if (navigation.canGoBack()) {
+        navigation.goBack(); // Ensure navigation is used correctly
+      } else {
+        console.warn('Cannot go back, navigation stack does not support it.');
+        // Optionally navigate to a specific screen
+        // navigation.navigate('PreviousScreenName');
+      }
     } catch (error) {
       console.error('Error adding item:', error);
       Alert.alert('Error', 'Failed to add item to inventory');
@@ -255,6 +268,53 @@ export const AddItemScreen = () => {
       setLoading(false);
     }
   };
+
+  // Camera component
+  if (showCamera) {
+    return (
+      <View style={styles.cameraContainer}>
+        <CameraView
+          ref={cameraRef}
+          style={styles.camera}
+          type="back"
+          ratio="16:9"
+        >
+          <View style={styles.cameraControls}>
+            <TouchableOpacity 
+              style={styles.backButton}
+              onPress={() => setShowCamera(false)}
+            >
+              <Text style={styles.backButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.captureButton}
+              onPress={async () => {
+                if (cameraRef.current) {
+                  try {
+                    const photo = await cameraRef.current.takePictureAsync();
+                    setShowCamera(false);
+                    if (photo.uri) {
+                      const imageUrl = await uploadImageToStorage(photo.uri);
+                      if (imageUrl) {
+                        setItemImage(imageUrl);
+                        Alert.alert('Success', 'Photo captured and uploaded successfully!');
+                      }
+                    }
+                  } catch (error) {
+                    console.error('Error taking picture:', error);
+                    Alert.alert('Error', 'Failed to take picture');
+                  }
+                }
+              }}
+            >
+              <View style={styles.captureButtonInner} />
+            </TouchableOpacity>
+          </View>
+        </CameraView>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -268,14 +328,40 @@ export const AddItemScreen = () => {
               source={typeof itemImage === 'string' ? { uri: itemImage } : itemImage}
               style={styles.itemImage}
             />
-            <Button
-              mode="contained"
-              onPress={handleImagePicker}
-              style={styles.imageButton}
-              buttonColor="#FF6F61"
-            >
-              Upload Image
-            </Button>
+            <View style={styles.imageButtonsContainer}>
+              <Button
+                mode="contained"
+                onPress={handleImagePicker}
+                style={styles.imageButton}
+                buttonColor="#FF6F61"
+                icon="image"
+              >
+                Gallery
+              </Button>
+              <Button
+                mode="contained"
+                onPress={async () => {
+                  try {
+                    // Use the correct approach for requesting camera permissions
+                    const { status } = await Camera.requestCameraPermissionsAsync();
+                    setCameraPermission(status === 'granted');
+                    if (status === 'granted') {
+                      setShowCamera(true);
+                    } else {
+                      Alert.alert('Permission Required', 'Camera permission is required to take photos');
+                    }
+                  } catch (error) {
+                    console.error('Error requesting camera permission:', error);
+                    Alert.alert('Error', 'Failed to request camera permission');
+                  }
+                }}
+                style={styles.imageButton}
+                buttonColor="#FF6F61"
+                icon="camera"
+              >
+                Camera
+              </Button>
+            </View>
           </View>
           
           <TextInput
@@ -382,8 +468,14 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 10,
   },
+  imageButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
   imageButton: {
-    marginBottom: 10,
+    flex: 1,
+    marginHorizontal: 5,
   },
   input: {
     width: '80%',
@@ -410,6 +502,45 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     marginHorizontal: 8,
+  },
+  // Camera styles
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  camera: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  cameraControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingBottom: 30,
+    width: '100%',
+  },
+  captureButton: {
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  captureButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#fff',
+  },
+  backButton: {
+    position: 'absolute',
+    left: 20,
+    padding: 15,
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 18,
   },
 });
 
