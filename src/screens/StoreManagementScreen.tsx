@@ -63,7 +63,7 @@ export const StoreManagementScreen = () => {
     try {
       // Get inventory items directly without joining
       const { data, error } = await supabase
-        .from('inventory')
+        .from('inventory_items')
         .select(`
           id,
           name,
@@ -102,7 +102,7 @@ export const StoreManagementScreen = () => {
   const toggleStockStatus = async (itemId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
-        .from('inventory')
+        .from('inventory_items')
         .update({ stock_status: !currentStatus })
         .eq('id', itemId);
 
@@ -133,7 +133,7 @@ export const StoreManagementScreen = () => {
     
     try {
       const { error } = await supabase
-        .from('inventory')
+        .from('inventory_items')
         .update({ price: newPrice })
         .eq('id', itemId);
 

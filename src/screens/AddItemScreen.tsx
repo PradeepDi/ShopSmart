@@ -231,7 +231,7 @@ export const AddItemScreen = () => {
     try {
       // Add the item directly to the inventory table
       const { error: inventoryError } = await supabase
-        .from('inventory')
+        .from('inventory_items')
         .insert([
           {
             shop_id: storeId,

@@ -42,7 +42,7 @@ const PickItemScreen = () => {
 
       // Query inventory items that match the item name
       const { data: inventoryItems, error: inventoryError } = await supabase
-        .from('inventory')
+        .from('inventory_items')
         .select(`
           id,
           name,

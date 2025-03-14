@@ -203,7 +203,7 @@ export const ViewItemScreen = () => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('inventory')
+        .from('inventory_items')
         .update({
           name: itemName.trim(),
           price: parseFloat(price),
