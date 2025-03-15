@@ -278,9 +278,7 @@ const ListViewScreen = () => {
           <Button
             mode="contained"
             style={styles.button}
-            onPress={() => {
-              // Handle view parking location logic
-            }}
+            onPress={() => navigation.navigate('ViewParking')}
           >
             View Parkings
           </Button>
