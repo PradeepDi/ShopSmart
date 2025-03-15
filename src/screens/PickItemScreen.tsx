@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { supabase } from '../../supabaseClient';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type PickItemScreenNavigationProp = StackNavigationProp<RootStackParamList, 'PickItem'>;
 type PickItemScreenRouteProp = RouteProp<RootStackParamList, 'PickItem'>;
@@ -139,9 +140,27 @@ const PickItemScreen = () => {
           </Chip>
         </View>
       </Card.Content>
-      <Card.Actions>
+      <Card.Actions style={styles.cardActions}>
+        <Button 
+          mode="outlined" 
+          onPress={() => navigation.navigate('ViewLocation', {
+            storeName: item.store_name
+          })} 
+          style={styles.locationButton}
+          icon="map-marker"
+        >
+          View Location
+        </Button>
         <Button mode="contained" onPress={() => viewItemDetails(item)} style={styles.button}>
           View Details
+        </Button>
+        <Button 
+          mode="outlined" 
+          onPress={() => {}} 
+          style={styles.pickItemButton}
+          icon="cart-plus"
+        >
+          Pick Item
         </Button>
       </Card.Actions>
     </Card>
@@ -260,8 +279,22 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#FF6F61',
-    marginLeft: 'auto',
+    marginLeft: 8,
   },
+  cardActions: {
+    justifyContent: 'flex-end',
+  },
+  locationButton: {
+    borderColor: '#4CAF50',
+    borderWidth: 1,
+    marginRight: 8,
+  },
+  pickItemButton: {
+    borderColor: '#FF9800',
+    borderWidth: 1,
+    marginRight: 8,
+  },
+  marginLeft: 'auto',
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
