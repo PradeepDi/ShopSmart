@@ -165,7 +165,7 @@ export const StoreManagementScreen = () => {
     
     try {
       const { error } = await supabase
-        .from('inventory')
+        .from('inventory_items')
         .delete()
         .eq('id', deleteItemId);
 

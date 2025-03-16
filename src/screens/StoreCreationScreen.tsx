@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Text } from 'react-native';
-import { Button, TextInput, Title, Snackbar } from 'react-native-paper';
+import { Button, TextInput, Title, Snackbar, HelperText } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
 
@@ -9,7 +9,7 @@ export const StoreCreationScreen = () => {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [contact, setContact] = useState('');
-  const [mapLink, setMapLink] = useState('');
+  const [coordinates, setCoordinates] = useState('');
   const [loading, setLoading] = useState(false);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -30,6 +30,23 @@ export const StoreCreationScreen = () => {
         throw new Error('User not authenticated');
       }
 
+      // Parse coordinates string (expected format: "latitude,longitude")
+      let parsedLatitude = null;
+      let parsedLongitude = null;
+      
+      if (coordinates.trim()) {
+        const coordsArray = coordinates.split(',');
+        if (coordsArray.length === 2) {
+          parsedLatitude = parseFloat(coordsArray[0].trim());
+          parsedLongitude = parseFloat(coordsArray[1].trim());
+          
+          if (isNaN(parsedLatitude) || isNaN(parsedLongitude)) {
+            parsedLatitude = null;
+            parsedLongitude = null;
+          }
+        }
+      }
+
       const { data, error } = await supabase
         .from('shops')
         .insert([
@@ -38,7 +55,8 @@ export const StoreCreationScreen = () => {
             name,
             address,
             contact,
-            map_link: mapLink,
+            latitude: parsedLatitude,
+            longitude: parsedLongitude,
           },
         ]);
 
@@ -97,13 +115,16 @@ export const StoreCreationScreen = () => {
           />
           
           <TextInput
-            label="Map Link"
-            value={mapLink}
-            onChangeText={setMapLink}
+            label="Store Coordinates"
+            value={coordinates}
+            onChangeText={setCoordinates}
             style={styles.input}
             mode="outlined"
-            placeholder="https://maps.google.com/..."
+            placeholder="e.g. 37.7749, -122.4194"
           />
+          <HelperText type="info" style={styles.helperText}>
+            Enter as "latitude, longitude" (e.g. 37.7749, -122.4194)
+          </HelperText>
           
           <View style={styles.buttonContainer}>
             <Button 
@@ -169,6 +190,11 @@ const styles = StyleSheet.create({
   input: {
     width: '80%',
     marginVertical: 10,
+  },
+  helperText: {
+    width: '80%',
+    marginTop: -8,
+    marginBottom: 10,
   },
   buttonContainer: {
     flexDirection: 'row',

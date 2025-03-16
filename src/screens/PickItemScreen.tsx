@@ -21,6 +21,8 @@ interface ShopItem {
   store_id: string;
   store_name?: string;
   store_location?: string;
+  store_latitude?: number;
+  store_longitude?: number;
 }
 
 const PickItemScreen = () => {
@@ -52,7 +54,7 @@ const PickItemScreen = () => {
           description,
           image_url,
           shop_id,
-          shops(name, address)
+          shops(name, address, latitude, longitude)
         `)
         .ilike('name', `%${itemName}%`);
 
@@ -71,7 +73,9 @@ const PickItemScreen = () => {
           image_url: item.image_url,
           store_id: item.store_id,
           store_name: item.shops?.name,
-          store_location: item.shops?.address
+          store_location: item.shops?.address,
+          store_latitude: item.shops?.latitude || 0,
+          store_longitude: item.shops?.longitude || 0
         }));
 
         setItems(formattedItems);
@@ -144,7 +148,9 @@ const PickItemScreen = () => {
         <Button 
           mode="outlined" 
           onPress={() => navigation.navigate('ViewLocation', {
-            storeName: item.store_name
+            storeName: item.store_name,
+            storeLatitude: item.store_latitude,
+            storeLongitude: item.store_longitude
           })} 
           style={styles.locationButton}
           icon="map-marker"

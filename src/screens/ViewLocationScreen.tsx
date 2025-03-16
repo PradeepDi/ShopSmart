@@ -32,12 +32,14 @@ interface StoreLocation {
 
 interface RouteParams {
   storeName?: string;
+  storeLatitude?: number;
+  storeLongitude?: number;
 }
 
 const ViewLocationScreen = () => {
   const navigation = useNavigation<ViewLocationScreenNavigationProp>();
   const route = useRoute<ViewLocationScreenRouteProp>();
-  const { storeName } = route.params || {};
+  const { storeName, storeLatitude, storeLongitude } = route.params || {};
   
   const [location, setLocation] = useState<LocationData | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -55,13 +57,21 @@ const ViewLocationScreen = () => {
   }, []);
 
   useEffect(() => {
-    // If a store name was passed in the route params, set it as the search query
-    if (storeName) {
+    // If store coordinates were passed in the route params, use them for search
+    if (storeLatitude && storeLongitude) {
+      // If we have coordinates, we'll search by location
+      searchStoresByCoordinates(storeLatitude, storeLongitude);
+      // Also set the store name as search query if available
+      if (storeName) {
+        setSearchQuery(storeName);
+      }
+    } else if (storeName) {
+      // If only store name was passed, set it as the search query
       setSearchQuery(storeName);
       // Automatically search when a store name is provided
       searchStoresByName();
     }
-  }, [storeName]);
+  }, [storeName, storeLatitude, storeLongitude]);
 
   const getLocationPermission = async () => {
     setLoading(true);
@@ -106,8 +116,124 @@ const ViewLocationScreen = () => {
     getCurrentLocation();
   };
 
-  // Search for stores using Google Places API
+  // Search for stores using coordinates
+  const searchStoresByCoordinates = async (latitude: number, longitude: number) => {
+    try {
+      setSearchingStores(true);
+      setSearchError(null);
 
+      // First try to find a store in the database with these coordinates
+      const { data, error } = await supabase
+        .from('shops')
+        .select('id, name, address, latitude, longitude')
+        .eq('latitude', latitude)
+        .eq('longitude', longitude)
+        .limit(1);
+
+      let storeResult;
+
+      // If we found a store with exact coordinates in the database
+      if (!error && data && data.length > 0) {
+        const store = data[0];
+        storeResult = {
+          id: store.id,
+          name: store.name || searchQuery || 'Store Location',
+          latitude: latitude,
+          longitude: longitude,
+          address: store.address || 'No address available'
+        };
+      } else {
+        // If no exact match, try to find the closest store
+        const { data: allStores, error: storesError } = await supabase
+          .from('shops')
+          .select('id, name, address, latitude, longitude');
+
+        if (!storesError && allStores && allStores.length > 0) {
+          // Find the closest store based on coordinates
+          let closestStore = null;
+          let minDistance = Number.MAX_VALUE;
+
+          for (const store of allStores) {
+            if (store.latitude && store.longitude) {
+              const distance = calculateDistance(
+                latitude, longitude,
+                store.latitude, store.longitude
+              );
+
+              if (distance < minDistance) {
+                minDistance = distance;
+                closestStore = store;
+              }
+            }
+          }
+
+          if (closestStore && minDistance < 1) { // Within 1km
+            storeResult = {
+              id: closestStore.id,
+              name: searchQuery || closestStore.name || 'Store Location',
+              latitude: latitude,
+              longitude: longitude,
+              address: closestStore.address || 'No address available'
+            };
+          } else {
+            // No nearby store found
+            storeResult = {
+              id: 'store-1',
+              name: searchQuery || 'Store Location',
+              latitude: latitude,
+              longitude: longitude,
+              address: 'No address available for these coordinates'
+            };
+          }
+        } else {
+          // No stores in database or error
+          storeResult = {
+            id: 'store-1',
+            name: searchQuery || 'Store Location',
+            latitude: latitude,
+            longitude: longitude,
+            address: 'No address available for these coordinates'
+          };
+        }
+      }
+
+      // Set the store as the only result and select it
+      setStoreLocations([storeResult]);
+      setSelectedStore(storeResult);
+      
+      // Center the map on the provided coordinates
+      setLocation({
+        latitude: latitude,
+        longitude: longitude
+      });
+    } catch (error) {
+      console.error('Error setting store location:', error);
+      setSearchError('Failed to set store location');
+      setStoreLocations([]);
+    } finally {
+      setSearchingStores(false);
+    }
+  };
+
+  // Helper function to calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const distance = R * c; // Distance in km
+    return distance;
+  };
+
+  const deg2rad = (deg: number) => {
+    return deg * (Math.PI/180);
+  };
+
+  // Search for stores using Google Places API
   const searchStoresByName = async () => {
     if (!searchQuery.trim()) {
       Alert.alert('Error', 'Please enter a store name to search');
@@ -122,20 +248,30 @@ const ViewLocationScreen = () => {
       const { data, error } = await supabase
         .from('shops')
         .select('id, name, address, latitude, longitude')
-        .ilike('name', `%${searchQuery}%`);
+        .ilike('name', `%${searchQuery}%`)
+        .limit(1); // Only get the first matching store
 
-      // If we have results from the database, use them
+      // If we have a result from the database, use it
       if (!error && data && data.length > 0) {
-        const storeResults = data.map((store: any) => ({
+        const store = data[0];
+        const storeResult = {
           id: store.id,
           name: store.name,
           latitude: store.latitude || 0,
           longitude: store.longitude || 0,
           address: store.address
-        }));
+        };
 
-        setStoreLocations(storeResults);
-        setSelectedStore(null);
+        setStoreLocations([storeResult]); // Only set the single store
+        setSelectedStore(storeResult); // Automatically select it
+        
+        // Center the map on the store
+        if (storeResult.latitude && storeResult.longitude) {
+          setLocation({
+            latitude: storeResult.latitude,
+            longitude: storeResult.longitude
+          });
+        }
       } else {
         // If no results in database or there was an error, use Google Places API
         const apiKey = GOOGLE_MAPS_API_KEY;
@@ -159,22 +295,30 @@ const ViewLocationScreen = () => {
           throw new Error(`Places API error: ${data.status}${data.error_message ? ` - ${data.error_message}` : ''}`);
         }
         
-        // Transform the API response into our StoreLocation format
-        const storeResults = data.results.map((place: any, index: number) => ({
-          id: place.place_id || `store-${index}`,
-          name: place.name,
-          latitude: place.geometry.location.lat,
-          longitude: place.geometry.location.lng,
-          address: place.formatted_address,
-          vicinity: place.vicinity,
-          rating: place.rating
-        }));
-        
-        if (storeResults.length === 0) {
-          setSearchError(`No stores found matching "${searchQuery}"`);
+        // Get only the first result from the API
+        if (data.results && data.results.length > 0) {
+          const place = data.results[0];
+          const storeResult = {
+            id: place.place_id || 'store-1',
+            name: place.name,
+            latitude: place.geometry.location.lat,
+            longitude: place.geometry.location.lng,
+            address: place.formatted_address,
+            vicinity: place.vicinity,
+            rating: place.rating
+          };
+          
+          setStoreLocations([storeResult]); // Only set the single store
+          setSelectedStore(storeResult); // Automatically select it
+          
+          // Center the map on the store
+          setLocation({
+            latitude: storeResult.latitude,
+            longitude: storeResult.longitude
+          });
         } else {
-          setStoreLocations(storeResults);
-          setSelectedStore(null);
+          setSearchError(`No stores found matching "${searchQuery}"`);
+          setStoreLocations([]);
         }
       }
     } catch (error) {
@@ -326,12 +470,6 @@ const ViewLocationScreen = () => {
               {selectedStore.rating && (
                 <Text style={styles.infoText}>Rating: {selectedStore.rating} ⭐</Text>
               )}
-              {location && (
-                <>
-                  <Text style={styles.infoText}>Latitude: {selectedStore.latitude.toFixed(6)}</Text>
-                  <Text style={styles.infoText}>Longitude: {selectedStore.longitude.toFixed(6)}</Text>
-                </>
-              )}
             </View>
           )}
           
@@ -348,13 +486,21 @@ const ViewLocationScreen = () => {
           
           <Button 
             mode="contained" 
-            onPress={searchStoresByName} 
+            onPress={() => {
+              // If we have coordinates from route params, use them for search
+              if (storeLatitude && storeLongitude) {
+                searchStoresByCoordinates(storeLatitude, storeLongitude);
+              } else {
+                // Otherwise use the name-based search
+                searchStoresByName();
+              }
+            }} 
             style={styles.searchButton}
             icon="store-search"
             loading={searchingStores}
-            disabled={searchingStores || !searchQuery.trim()}
+            disabled={searchingStores || (!searchQuery.trim() && !storeLatitude && !storeLongitude)}
           >
-            Search Stores
+            Search Store
           </Button>
           
           <Button 
