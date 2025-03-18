@@ -182,7 +182,13 @@ const ViewLocationScreen = () => {
 
   const refreshLocation = () => {
     setLoading(true);
-    getCurrentLocation();
+    // Get current location and update the map to center on user's location
+    getCurrentLocation().then(() => {
+      // If we have user location, update the main location for the map
+      if (userLocation) {
+        setLocation(userLocation);
+      }
+    });
     startLocationTracking();
   };
 
