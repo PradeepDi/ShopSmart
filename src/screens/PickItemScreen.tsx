@@ -147,11 +147,16 @@ const PickItemScreen = () => {
       <Card.Actions style={styles.cardActions}>
         <Button 
           mode="outlined" 
-          onPress={() => navigation.navigate('ViewLocation', {
-            storeName: item.store_name,
-            storeLatitude: item.store_latitude,
-            storeLongitude: item.store_longitude
-          })} 
+          onPress={() => {
+            // Navigate to ViewLocation with store details
+            // The ViewLocationScreen will automatically display this store
+            // without requiring the user to click the Search Store button
+            navigation.navigate('ViewLocation', {
+              storeName: item.store_name,
+              storeLatitude: item.store_latitude,
+              storeLongitude: item.store_longitude
+            });
+          }} 
           style={styles.locationButton}
           icon="map-marker"
         >

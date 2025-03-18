@@ -51,9 +51,22 @@ const ViewLocationScreen = () => {
   const [selectedStore, setSelectedStore] = useState<StoreLocation | null>(null);
 
   useEffect(() => {
-    (async () => {
-      await getLocationPermission();
-    })();
+    // If store coordinates were passed, prioritize showing store location
+    // Otherwise get user's location as fallback
+    if (storeLatitude && storeLongitude) {
+      // Skip getting user location permission if we already have store coordinates
+      setLoading(false);
+      // Set the location directly to the store coordinates
+      setLocation({
+        latitude: storeLatitude,
+        longitude: storeLongitude
+      });
+    } else {
+      // Only get user location if no store coordinates were provided
+      (async () => {
+        await getLocationPermission();
+      })();
+    }
   }, []);
 
   useEffect(() => {
@@ -71,7 +84,7 @@ const ViewLocationScreen = () => {
       // Automatically search when a store name is provided
       searchStoresByName();
     }
-  }, [storeName, storeLatitude, storeLongitude]);
+  }, []);
 
   const getLocationPermission = async () => {
     setLoading(true);
@@ -345,7 +358,7 @@ const ViewLocationScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Shop Search</Text>
+        <Text style={styles.title}>{storeName ? `${storeName} Location` : 'Shop Search'}</Text>
       </View>
       
       {loading ? (
@@ -507,9 +520,9 @@ const ViewLocationScreen = () => {
             mode="contained" 
             onPress={refreshLocation} 
             style={styles.refreshButton}
-            icon="refresh"
+            icon={storeLatitude && storeLongitude ? "crosshairs-gps" : "refresh"}
           >
-            Refresh Location
+            {storeLatitude && storeLongitude ? "View Current Location" : "Refresh Location"}
           </Button>
         </View>
       )}
