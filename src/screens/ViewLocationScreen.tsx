@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, Platform, TextInput } from 'react-native';
 import { Button, IconButton } from 'react-native-paper';
 import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps';
@@ -42,6 +42,8 @@ const ViewLocationScreen = () => {
   const { storeName, storeLatitude, storeLongitude } = route.params || {};
   
   const [location, setLocation] = useState<LocationData | null>(null);
+  const [userLocation, setUserLocation] = useState<LocationData | null>(null);
+  const locationSubscription = useRef<any>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [storeLocations, setStoreLocations] = useState<StoreLocation[]>([]);
@@ -52,7 +54,6 @@ const ViewLocationScreen = () => {
 
   useEffect(() => {
     // If store coordinates were passed, prioritize showing store location
-    // Otherwise get user's location as fallback
     if (storeLatitude && storeLongitude) {
       // Skip getting user location permission if we already have store coordinates
       setLoading(false);
@@ -61,12 +62,19 @@ const ViewLocationScreen = () => {
         latitude: storeLatitude,
         longitude: storeLongitude
       });
-    } else {
-      // Only get user location if no store coordinates were provided
-      (async () => {
-        await getLocationPermission();
-      })();
     }
+    
+    // Always get user location permission for distance calculation
+    (async () => {
+      await getLocationPermission();
+    })();
+    
+    // Cleanup function to remove location subscription
+    return () => {
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -99,7 +107,11 @@ const ViewLocationScreen = () => {
         return;
       }
       
+      // Get initial location
       await getCurrentLocation();
+      
+      // Start watching position for real-time updates
+      startLocationTracking();
     } catch (error) {
       setErrorMsg('Error requesting location permission');
       setLoading(false);
@@ -112,21 +124,66 @@ const ViewLocationScreen = () => {
         accuracy: Location.Accuracy.Highest,
       });
       
-      setLocation({
+      const locationData = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         accuracy: location.coords.accuracy,
-      });
+      };
+      
+      // Update user location
+      setUserLocation(locationData);
+      
+      // If we don't have store coordinates, also set as main location for map
+      if (!storeLatitude || !storeLongitude) {
+        setLocation(locationData);
+      }
     } catch (error) {
       setErrorMsg('Error getting current location');
     } finally {
       setLoading(false);
     }
   };
+  
+  // Start continuous location tracking
+  const startLocationTracking = async () => {
+    try {
+      // Remove any existing subscription
+      if (locationSubscription.current) {
+        locationSubscription.current.remove();
+      }
+      
+      // Start watching position
+      locationSubscription.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.Balanced,
+          distanceInterval: 10, // Update if user moves more than 10 meters
+          timeInterval: 5000,   // Or update every 5 seconds
+        },
+        (newLocation) => {
+          const locationData = {
+            latitude: newLocation.coords.latitude,
+            longitude: newLocation.coords.longitude,
+            accuracy: newLocation.coords.accuracy,
+          };
+          
+          // Update user location
+          setUserLocation(locationData);
+          
+          // If we don't have store coordinates, also update main location for map
+          if (!storeLatitude || !storeLongitude) {
+            setLocation(locationData);
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error watching position:', error);
+    }
+  };
 
   const refreshLocation = () => {
     setLoading(true);
     getCurrentLocation();
+    startLocationTracking();
   };
 
   // Search for stores using coordinates
@@ -244,6 +301,20 @@ const ViewLocationScreen = () => {
 
   const deg2rad = (deg: number) => {
     return deg * (Math.PI/180);
+  };
+
+  // Format distance to be user-friendly (show in km or m)
+  const formatDistance = (distance: number) => {
+    if (distance < 0.1) {
+      // If less than 100m, show in meters
+      return `${Math.round(distance * 1000)}m`;
+    } else if (distance < 1) {
+      // If less than 1km, show in meters with one decimal
+      return `${Math.round(distance * 1000)}m`;
+    } else {
+      // Otherwise show in kilometers with one decimal
+      return `${distance.toFixed(1)}km`;
+    }
   };
 
   // Search for stores using Google Places API
@@ -482,6 +553,17 @@ const ViewLocationScreen = () => {
               )}
               {selectedStore.rating && (
                 <Text style={styles.infoText}>Rating: {selectedStore.rating} ⭐</Text>
+              )}
+              {/* Display distance from current location to store */}
+              {userLocation && (
+                <Text style={styles.infoText}>
+                  Distance: {formatDistance(calculateDistance(
+                    userLocation.latitude, 
+                    userLocation.longitude, 
+                    selectedStore.latitude, 
+                    selectedStore.longitude
+                  ))}
+                </Text>
               )}
             </View>
           )}
