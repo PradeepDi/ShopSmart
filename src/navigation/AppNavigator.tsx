@@ -38,7 +38,11 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 export const AppNavigator = () => (
-  <Stack.Navigator initialRouteName="Welcome" id={undefined}>
+  <Stack.Navigator 
+    initialRouteName="Welcome" 
+    screenOptions={{ headerShown: false }}
+    id={undefined}
+  >
     <Stack.Screen name="Welcome" component={WelcomeScreen} />
     <Stack.Screen name="CreateList" component={CreateListScreen} />
     <Stack.Screen name="ListView" component={ListViewScreen} />
