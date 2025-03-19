@@ -2,19 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, Modal } from 'react-native';
 import { IconButton, Button, TextInput, Checkbox } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import { RouteProp, useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { supabase } from '../../supabaseClient'; // Adjust the path as necessary
 
 type ListViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ListView'>;
 type ListViewScreenRouteProp = RouteProp<RootStackParamList, 'ListView'>;
 
-// Define an interface for item structure with name and quantity
+// Define an interface for item structure with name, quantity, and store information
 interface ListItem {
   id: number;
   name: string;
   quantity: number;
   is_checked: boolean;
+  store_name?: string;
+  price?: number;
+  distance?: number | null;
 }
 
 const ListViewScreen = () => {
@@ -40,31 +43,49 @@ const ListViewScreen = () => {
     checkAuthStatus();
   }, []);
 
+  // Define fetchItems function outside of useEffect for reuse
+  const fetchItems = async () => {
+    if (!listId) return;
+    
+    const { data, error } = await supabase
+      .from('items') // Assuming you have an 'items' table
+      .select('id, name, quantity, is_checked, store_name, price, distance')
+      .eq('list_id', listId);
+
+    if (error) {
+      console.error(error);
+    } else {
+      // Transform the data to match our ListItem interface
+      const formattedItems = data.map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity || 1, // Default to 1 if quantity is not present
+        is_checked: item.is_checked || false,
+        store_name: item.store_name || null,
+        price: item.price || null,
+        distance: item.distance || null
+      }));
+      setItems(formattedItems);
+    }
+  };
+
+  // Initial fetch when component mounts
   useEffect(() => {
-    const fetchItems = async () => {
-      const { data, error } = await supabase
-        .from('items') // Assuming you have an 'items' table
-        .select('id, name, quantity, is_checked')
-        .eq('list_id', listId);
-
-      if (error) {
-        console.error(error);
-      } else {
-        // Transform the data to match our ListItem interface
-        const formattedItems = data.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          quantity: item.quantity || 1, // Default to 1 if quantity is not present
-          is_checked: item.is_checked || false
-        }));
-        setItems(formattedItems);
-      }
-    };
-
     if (listId) {
       fetchItems();
     }
   }, [listId]);
+  
+  // Refresh items when screen comes into focus (e.g., returning from PickItem screen)
+  useFocusEffect(
+    React.useCallback(() => {
+      if (listId) {
+        // Fetch items to get the latest data including store information
+        fetchItems();
+      }
+      return () => {}; // Cleanup function
+    }, [listId])
+  );
 
   const editItem = (index: number) => {
     const item = items[index];
@@ -196,6 +217,28 @@ const ListViewScreen = () => {
     const parsedQuantity = parseInt(quantity);
     return !isNaN(parsedQuantity) && parsedQuantity > 0;
   };
+  
+  // Format distance to be user-friendly (show in km or m)
+  const formatDistance = (distance: number | null) => {
+    if (distance === null || distance === undefined) return 'Unknown';
+    
+    // Convert to number if it's a string or other type
+    const distanceNum = Number(distance);
+    
+    // Check if conversion resulted in a valid number
+    if (isNaN(distanceNum)) return 'Unknown';
+  
+    if (distanceNum < 0.1) {
+      // If less than 100m, show in meters
+      return `${Math.round(distanceNum * 1000)}m`;
+    } else if (distanceNum < 1) {
+      // If less than 1km, show in meters
+      return `${Math.round(distanceNum * 1000)}m`;
+    } else {
+      // Otherwise show in kilometers with one decimal
+      return `${distanceNum.toFixed(1)}km`;
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -228,6 +271,15 @@ const ListViewScreen = () => {
               <View style={styles.itemDetails}>
                 <Text style={[styles.itemText, item.is_checked && styles.checkedItemText]}>{item.name}</Text>
                 <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
+                {item.store_name && (
+                  <Text style={styles.storeInfoText}>Store: {item.store_name}</Text>
+                )}
+                {item.price && (
+                  <Text style={styles.priceText}>Price: Rs. {item.price.toFixed(2)}</Text>
+                )}
+                {item.distance !== null && item.distance !== undefined && (
+                  <Text style={styles.distanceText}>Distance: {formatDistance(item.distance)}</Text>
+                )}
               </View>
             </View>
             <View style={styles.iconContainer}>
@@ -244,7 +296,11 @@ const ListViewScreen = () => {
               <Button
                 mode="text"
                 onPress={() => {
-                  navigation.navigate('PickItem', { itemName: item.name });
+                  navigation.navigate('PickItem', { 
+                    itemName: item.name,
+                    listId: listId,
+                    listName: listName
+                  });
                 }}
                 style={styles.viewShopsButton}
               >
@@ -425,6 +481,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 4,
+  },
+  storeInfoText: {
+    fontSize: 12,
+    color: '#4CAF50',
+    marginTop: 2,
+  },
+  priceText: {
+    fontSize: 12,
+    color: '#FF6F61',
+    marginTop: 2,
+    fontWeight: 'bold',
+  },
+  distanceText: {
+    fontSize: 12,
+    color: '#2196F3',
+    marginTop: 2,
   },
   checkedItemText: {
     textDecorationLine: 'line-through',

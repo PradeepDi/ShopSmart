@@ -29,7 +29,7 @@ export type RootStackParamList = {
   StoreManagement: { storeId: string };
   AddInventoryItem: { storeId: string };
   ViewItem: { item: { id: string; item_name: string; price: number; stock_status: boolean; description?: string; image_url?: string; } };
-  PickItem: { itemName: string };
+  PickItem: { itemName: string; listId?: number; listName?: string };
   ViewParking: undefined;
   ViewLocation: { storeName?: string; storeLatitude?: number; storeLongitude?: number };
   // Add other routes here as needed

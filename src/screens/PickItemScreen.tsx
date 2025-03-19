@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image } from 'react-native';
 import { Button, Card, Divider, Chip } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -6,6 +6,7 @@ import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { supabase } from '../../supabaseClient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 
 type PickItemScreenNavigationProp = StackNavigationProp<RootStackParamList, 'PickItem'>;
 type PickItemScreenRouteProp = RouteProp<RootStackParamList, 'PickItem'>;
@@ -23,6 +24,8 @@ interface ShopItem {
   store_location?: string;
   store_latitude?: number;
   store_longitude?: number;
+  distance?: number;
+  distanceLoading?: boolean;
 }
 
 const PickItemScreen = () => {
@@ -33,16 +36,175 @@ const PickItemScreen = () => {
   const [items, setItems] = useState<ShopItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [locationPermission, setLocationPermission] = useState<boolean>(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const locationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const distanceCache = useRef<Map<string, number | null>>(new Map());
 
   useEffect(() => {
+    // Start fetching items immediately without waiting for location
     fetchItemsFromShops();
+    
+    // Get location permission and location in parallel
+    (async () => {
+      await getLocationPermission();
+    })();
+    
+    // Cleanup function to clear any pending timeouts
+    return () => {
+      if (locationTimeoutRef.current) {
+        clearTimeout(locationTimeoutRef.current);
+      }
+    };
   }, []);
+  
+  // Add a separate useEffect to update distances when userLocation is set
+  useEffect(() => {
+    if (userLocation && items.length > 0) {
+      updateItemDistances();
+    }
+  }, [userLocation, items.length]);
+  
+  const getLocationPermission = async () => {
+    try {
+      setLocationLoading(true);
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      
+      if (status !== 'granted') {
+        console.log('Location permission denied');
+        setLocationPermission(false);
+        setLocationLoading(false);
+        return;
+      }
+      
+      setLocationPermission(true);
+      await getCurrentLocation();
+    } catch (error) {
+      console.error('Error requesting location permission:', error);
+      setLocationPermission(false);
+      setLocationLoading(false);
+    }
+  };
+  
+  const getCurrentLocation = async () => {
+    try {
+      // Set a timeout to prevent hanging on location requests
+      const locationPromise = Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High, // Use higher accuracy
+        mayShowUserSettingsDialog: true, // Prompt user to enable better accuracy if needed
+      });
+      
+      // Create a timeout promise
+      const timeoutPromise = new Promise<null>((_, reject) => {
+        locationTimeoutRef.current = setTimeout(() => {
+          reject(new Error('Location request timed out'));
+        }, 10000); // 10 second timeout
+      });
+      
+      // Race between location request and timeout
+      const location = await Promise.race([locationPromise, timeoutPromise]);
+      
+      // Clear the timeout if location was fetched successfully
+      if (locationTimeoutRef.current) {
+        clearTimeout(locationTimeoutRef.current);
+        locationTimeoutRef.current = null;
+      }
+      
+      if (location) {
+        setUserLocation({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
+      }
+    } catch (error) {
+      console.error('Error getting current location:', error);
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+  
+  // Calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const distance = R * c; // Distance in km
+    return distance;
+  };
+  
+  const deg2rad = (deg: number) => {
+    return deg * (Math.PI/180);
+  };
+  
+  // Format distance to be user-friendly (show in km or m)
+  const formatDistance = (distance: number | null, isLoading: boolean = false) => {
+    if (isLoading) return 'Calculating...';
+    if (distance === null) return 'Unknown';
+    
+    if (distance < 0.1) {
+      // If less than 100m, show in meters
+      return `${Math.round(distance * 1000)}m`;
+    } else if (distance < 1) {
+      // If less than 1km, show in meters
+      return `${Math.round(distance * 1000)}m`;
+    } else {
+      // Otherwise show in kilometers with one decimal
+      return `${distance.toFixed(1)}km`;
+    }
+  };
+  
+  // Update distances for all items when user location changes
+  const updateItemDistances = () => {
+    if (!userLocation) return;
+    
+    setItems(currentItems => {
+      return currentItems.map(item => {
+        // Skip if store doesn't have coordinates
+        if (!item.store_latitude || !item.store_longitude) {
+          return { ...item, distance: null, distanceLoading: false };
+        }
+        
+        // Create a cache key for this location pair
+        const cacheKey = `${userLocation.latitude},${userLocation.longitude}-${item.store_latitude},${item.store_longitude}`;
+        
+        // Check if we have a cached distance
+        if (distanceCache.current.has(cacheKey)) {
+          return { 
+            ...item, 
+            distance: distanceCache.current.get(cacheKey) || null,
+            distanceLoading: false 
+          };
+        }
+        
+        // Calculate distance
+        const distance = calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          item.store_latitude,
+          item.store_longitude
+        );
+        
+        // Cache the result
+        distanceCache.current.set(cacheKey, distance);
+        
+        return { ...item, distance, distanceLoading: false };
+      });
+    });
+  };
 
   const fetchItemsFromShops = async () => {
     try {
       setLoading(true);
       setError(null);
-
+  
       // Query inventory items that match the item name
       const { data: inventoryItems, error: inventoryError } = await supabase
         .from('inventory_items')
@@ -54,30 +216,58 @@ const PickItemScreen = () => {
           description,
           image_url,
           shop_id,
-          shops(name, address, latitude, longitude)
+          shops(id, name, address, latitude, longitude)
         `)
         .ilike('name', `%${itemName}%`);
-
+  
       if (inventoryError) {
         throw inventoryError;
       }
-
+  
       if (inventoryItems && inventoryItems.length > 0) {
         // Transform the data to include store information
-        const formattedItems = inventoryItems.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          stock_status: item.stock_status,
-          description: item.description,
-          image_url: item.image_url,
-          store_id: item.store_id,
-          store_name: item.shops?.name,
-          store_location: item.shops?.address,
-          store_latitude: item.shops?.latitude || 0,
-          store_longitude: item.shops?.longitude || 0
-        }));
-
+        const formattedItems = inventoryItems.map((item: any) => {
+          // Set initial distance loading state
+          const needsDistanceCalculation = 
+            item.shops && 
+            typeof item.shops === 'object' && 
+            item.shops.latitude && 
+            item.shops.longitude;
+          
+          // Calculate distance if user location is already available
+          let distance = null;
+          let distanceLoading = false;
+          
+          if (userLocation && needsDistanceCalculation) {
+            // Create a cache key for this location pair
+            const cacheKey = `${userLocation.latitude},${userLocation.longitude}-${item.shops.latitude},${item.shops.longitude}`;
+            
+            // Check if we have a cached distance
+            if (distanceCache.current.has(cacheKey)) {
+              distance = distanceCache.current.get(cacheKey);
+              distanceLoading = false;
+            } else {
+              // Calculate distance
+              distance = calculateDistance(
+                userLocation.latitude, 
+                userLocation.longitude, // Complete the line here
+                item.shops.latitude,
+                item.shops.longitude
+              );
+            }
+          }
+  
+          return {
+            ...item,
+            store_name: item.shops.name,
+            store_location: item.shops.address,
+            store_latitude: item.shops.latitude,
+            store_longitude: item.shops.longitude,
+            distance,
+            distanceLoading
+          };
+        });
+  
         setItems(formattedItems);
       } else {
         // No items found
@@ -91,6 +281,90 @@ const PickItemScreen = () => {
     }
   };
 
+  const pickItem = async (item: ShopItem) => {
+    try {
+      // Get the list ID from route params if available, otherwise use a default list
+      const { listId, itemName } = route.params as any || { listId: null, itemName: null };
+      
+      if (!listId) {
+        console.error('No list ID provided');
+        // You could navigate to list selection screen or create a new list here
+        return;
+      }
+      
+      // Format the distance for storage if available
+      const formattedDistance = item.distance !== null && item.distance !== undefined 
+        ? item.distance 
+        : null;
+      
+      // First check if this item already exists in the list
+      const { data: existingItems, error: queryError } = await supabase
+        .from('items')
+        .select('id, name, quantity')
+        .eq('list_id', listId)
+        .eq('name', itemName);
+      
+      if (queryError) {
+        console.error('Error checking for existing item:', queryError);
+        return;
+      }
+      
+      let resultData;
+      
+      if (existingItems && existingItems.length > 0) {
+        // Item already exists, update it with the new store information
+        const existingItem = existingItems[0];
+        
+        const { data, error } = await supabase
+          .from('items')
+          .update({ 
+            name: item.name, // Update with the specific product name from the shop
+            store_name: item.store_name,
+            price: item.price,
+            distance: formattedDistance
+          })
+          .eq('id', existingItem.id)
+          .select();
+        
+        if (error) {
+          console.error('Error updating item in list:', error);
+          return;
+        }
+        
+        resultData = data;
+      } else {
+        // Item doesn't exist, add it as a new item
+        const { data, error } = await supabase
+          .from('items')
+          .insert([{ 
+            name: item.name, 
+            list_id: listId,
+            quantity: 1, // Default quantity
+            store_name: item.store_name,
+            price: item.price,
+            distance: formattedDistance
+          }])
+          .select();
+        
+        if (error) {
+          console.error('Error adding item to list:', error);
+          return;
+        }
+        
+        resultData = data;
+      }
+      
+      // Navigate back to the ListView screen
+      navigation.navigate('ListView', { 
+        listId: listId,
+        listName: route.params.listName || 'My List'
+      });
+      
+    } catch (err) {
+      console.error('Error in pickItem:', err);
+    }
+  };
+  
   const viewItemDetails = (item: ShopItem) => {
     navigation.navigate('ViewItem', {
       item: {
@@ -113,25 +387,38 @@ const PickItemScreen = () => {
             <Text style={styles.itemName}>{item.name}</Text>
             <Text style={styles.price}>Rs. {item.price.toFixed(2)}</Text>
           </View>
-          {item.image_url ? (
-            <Image 
-              source={{ uri: item.image_url }} 
-              style={styles.itemImage} 
-              resizeMode="cover"
-            />
-          ) : (
-            <Image 
-              source={require('../../assets/product-default.png')} 
-              style={styles.itemImage} 
-              resizeMode="cover"
-            />
-          )}
+          <View style={styles.imageContainer}>
+            {item.image_url ? (
+              <Image 
+                source={{ uri: item.image_url }} 
+                style={styles.itemImage} 
+                resizeMode="cover"
+              />
+            ) : (
+              <Image 
+                source={require('../../assets/product-default.png')} 
+                style={styles.itemImage} 
+                resizeMode="cover"
+              />
+            )}
+          </View>
         </View>
         
         <Divider style={styles.divider} />
         
         <View style={styles.storeInfo}>
-          <Text style={styles.storeName}>Store: {item.store_name || 'Unknown'}</Text>
+          <View style={styles.storeNameContainer}>
+            <Text style={styles.storeName}>Store: {item.store_name || 'Unknown'}</Text>
+            <View style={styles.distanceBadge}>
+              <Text style={styles.distanceText}>
+                <MaterialCommunityIcons name="map-marker-distance" size={14} color="#fff" />
+                {' '}{formatDistance(item.distance, item.distanceLoading)}
+                {item.distanceLoading && (
+                  <ActivityIndicator size="small" color="#fff" style={{marginLeft: 4}} />
+                )}
+              </Text>
+            </View>
+          </View>
           <Text style={styles.storeLocation}>Location: {item.store_location || 'Not specified'}</Text>
         </View>
         
@@ -167,7 +454,7 @@ const PickItemScreen = () => {
         </Button>
         <Button 
           mode="outlined" 
-          onPress={() => {}} 
+          onPress={() => pickItem(item)} 
           style={styles.pickItemButton}
           icon="cart-plus"
         >
@@ -256,16 +543,40 @@ const styles = StyleSheet.create({
     color: '#FF6F61',
     fontWeight: 'bold',
   },
+  imageContainer: {
+    position: 'relative',
+    width: 60,
+    height: 60,
+  },
   itemImage: {
     width: 60,
     height: 60,
     borderRadius: 8,
+  },
+  distanceBadge: {
+    backgroundColor: '#FF6F61',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    elevation: 2,
+    marginLeft: 8,
+  },
+  distanceText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   divider: {
     marginVertical: 8,
   },
   storeInfo: {
     marginBottom: 8,
+  },
+  storeNameContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   storeName: {
     fontSize: 14,
