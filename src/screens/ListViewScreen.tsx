@@ -173,6 +173,40 @@ const ListViewScreen = () => {
     setItems(items.filter((_, i) => i !== index));
   };
 
+  const unpickItem = async (index: number) => {
+    const item = items[index];
+    
+    // Only proceed if the item has store information
+    if (!item.store_name && !item.price && item.distance === null) {
+      return;
+    }
+    
+    // Update the item in the database to remove store-specific information
+    const { error } = await supabase
+      .from('items')
+      .update({ 
+        store_name: null,
+        price: null,
+        distance: null
+      })
+      .eq('id', item.id);
+    
+    if (error) {
+      console.error('Error unpicking item:', error);
+      return;
+    }
+    
+    // Update local state
+    const updatedItems = [...items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      store_name: null,
+      price: null,
+      distance: null
+    };
+    setItems(updatedItems);
+  };
+
   const addItem = async () => {
     if (newItem.trim() && !isAdding) {
       setIsAdding(true);
@@ -314,6 +348,16 @@ const ListViewScreen = () => {
                     iconColor="#FF6F61"
                   />
                 </View>
+                {(item.store_name || item.price || item.distance !== null) && (
+                  <View style={styles.iconWrapper}>
+                    <IconButton
+                      icon="cart-remove"
+                      size={20}
+                      onPress={() => unpickItem(index)}
+                      iconColor="#FF6F61"
+                    />
+                  </View>
+                )}
                 <Button
                   mode="text"
                   onPress={() => {

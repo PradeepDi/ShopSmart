@@ -267,10 +267,10 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FF6F61',
     width: '100%',
-    paddingVertical: 80,
+    paddingVertical: 60,
     alignItems: 'center',
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   title: {
     fontSize: 32,
@@ -322,10 +322,10 @@ const styles = StyleSheet.create({
   button: {
     width: '100%',
     marginVertical: 15,
-    paddingVertical: 8,
+    paddingVertical: 5,
     justifyContent: 'center',
     backgroundColor: '#FF6F61',
-    borderRadius: 5,
+    borderRadius: 8,
   },
   itemContainer: {
     flexDirection: 'row',
