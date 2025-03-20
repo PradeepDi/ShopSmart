@@ -29,7 +29,7 @@ const WelcomeScreen = () => {
         <Text style={styles.title}>ShopSmart</Text>
         <Text style={styles.subtitle}>Your Smart Shopping Companion</Text>
       </View>
-      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>
+      <Animated.View style={[styles.content, { opacity: fadeAnim }]}>        
         <Button
           mode="contained"
           style={styles.button}
@@ -48,12 +48,14 @@ const WelcomeScreen = () => {
         >
           Login
         </Button>
-        <Text style={styles.footerText}>
-          Don't have an account?{' '}
-          <Text style={styles.signUpText} onPress={() => navigation.navigate('Signup')}>
-            Sign Up
+        <View style={styles.signupContainer}>
+          <Text style={styles.footerText}>
+            Don't have an account?{' '}
+            <Text style={styles.signUpText} onPress={() => navigation.navigate('Signup')}>
+              Sign Up
+            </Text>
           </Text>
-        </Text>
+        </View>
       </Animated.View>
     </View>
   );
@@ -67,15 +69,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#FAF3F3',
   },
   logo: {
-    width: width * 0.3,
-    height: width * 0.3,
+    width: width * 0.4,
+    height: width * 0.4,
     marginBottom: 10,
     tintColor: '#fff',
   },
   header: {
     backgroundColor: '#FF6F61',
     width: '100%',
-    paddingVertical: 40,
+    paddingVertical: 130,
     alignItems: 'center',
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
@@ -105,12 +107,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   button: {
-    width: '80%',
-    height: 56,
-    justifyContent: 'center',
+    width: '90%',
     marginVertical: 10,
+    paddingVertical: 8,
+    justifyContent: 'center',
     backgroundColor: '#FF6F61',
-    borderRadius: 28,
+    borderRadius: 5,
     elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -118,14 +120,16 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
   },
   buttonLabel: {
-    fontSize: 18,
+    fontSize: 16,
     letterSpacing: 0.5,
     fontWeight: '600',
   },
+  signupContainer: {
+    marginTop: 15,
+  },
   footerText: {
-    marginTop: 30,
-    color: '#333',
-    fontSize: 16,
+    color: '#666',
+    fontSize: 14,
   },
   signUpText: {
     color: '#FF6F61',

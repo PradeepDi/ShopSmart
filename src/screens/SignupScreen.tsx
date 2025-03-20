@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, LayoutChangeEvent, Alert } from 'react-native';
 import { TextInput, Button, Menu, Divider, Provider } from 'react-native-paper';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -16,6 +18,9 @@ const SignupScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
   const handleLayout = (event: LayoutChangeEvent) => {
     const { x, y, height } = event.nativeEvent.layout;
@@ -23,6 +28,12 @@ const SignupScreen = () => {
   };
 
   const handleSignup = async () => {
+    // Validate that passwords match
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Passwords do not match. Please try again.');
+      return;
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -50,47 +61,80 @@ const SignupScreen = () => {
 
   return (
     <Provider>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Sign Up</Text>
-        </View>
-        <View style={styles.content}>
+      <LinearGradient
+        colors={['#FF6F61', '#f5f0e8']}
+        style={styles.container}
+      >
+        <View style={styles.card}>
+          <View style={styles.logoContainer}>
+            <View style={styles.logoBackground}>
+              <Icon name="shield" size={30} color="#fff" />
+            </View>
+          </View>
+          
+          <Text style={styles.title}>Create an Account</Text>
+          <Text style={styles.subtitle}>Please fill in the form to register</Text>
           <TextInput
-            label="Name"
+            placeholder="Name"
             value={name}
             onChangeText={setName}
             style={styles.input}
+            mode="outlined"
+            outlineColor="#e0e0e0"
+            activeOutlineColor="#4169e1"
           />
           <TextInput
-            label="Email"
+            placeholder="Email"
             value={email}
             onChangeText={setEmail}
             style={styles.input}
+            mode="outlined"
+            outlineColor="#e0e0e0"
+            activeOutlineColor="#4169e1"
             keyboardType="email-address"
             autoCapitalize="none"
           />
           <TextInput
-            label="Password"
+            placeholder="Password"
             value={password}
             onChangeText={setPassword}
             style={styles.input}
-            secureTextEntry
+            mode="outlined"
+            outlineColor="#e0e0e0"
+            activeOutlineColor="#4169e1"
+            secureTextEntry={!passwordVisible}
+            right={<TextInput.Icon 
+              icon={passwordVisible ? "eye-off" : "eye"} 
+              onPress={() => setPasswordVisible(!passwordVisible)}
+              color="#aaa"
+            />}
           />
           <TextInput
-            label="Confirm Password"
+            placeholder="Confirm Password"
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
             mode="outlined"
-            secureTextEntry
+            outlineColor="#e0e0e0"
+            activeOutlineColor="#4169e1"
+            secureTextEntry={!confirmPasswordVisible}
             style={styles.input}
+            right={<TextInput.Icon 
+              icon={confirmPasswordVisible ? "eye-off" : "eye"} 
+              onPress={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
+              color="#aaa"
+            />}
           />
           <View style={styles.input} onLayout={handleLayout}>
             <TouchableOpacity onPress={() => setMenuVisible(true)}>
               <TextInput
-                label="User Type"
+                placeholder="User Type"
                 mode="outlined"
                 value={userType}
                 editable={false}
                 pointerEvents="none"
-                right={<TextInput.Icon icon="menu-down" />}
+                outlineColor="#e0e0e0"
+                activeOutlineColor="#4169e1"
+                right={<TextInput.Icon icon="menu-down" color="#aaa" />}
               />
             </TouchableOpacity>
             <Menu
@@ -115,21 +159,24 @@ const SignupScreen = () => {
               />
             </Menu>
           </View>
-          <Button
-            mode="contained"
+          <Button 
+            mode="contained" 
             style={styles.button}
             onPress={handleSignup}
           >
             Sign Up
           </Button>
-          <Text style={styles.footerText}>
-            Already have an account?{' '}
-            <Text style={styles.loginText} onPress={() => navigation.navigate('Login')}>
-              Login
+          
+          <View style={styles.loginContainer}>
+            <Text style={styles.footerText}>
+              Already have an account?{' '}
+              <Text style={styles.loginText} onPress={() => navigation.navigate('Login')}>
+                Login
+              </Text>
             </Text>
-          </Text>
+          </View>
         </View>
-      </View>
+      </LinearGradient>
     </Provider>
   );
 };
@@ -137,41 +184,65 @@ const SignupScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FAF3F3',
-  },
-  header: {
-    backgroundColor: '#FF6F61',
-    width: '100%',
-    paddingVertical: 60,
+    justifyContent: 'center',
     alignItems: 'center',
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    padding: 20,
+  },
+  card: {
+    backgroundColor: '#fff',
+    width: '90%',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  logoContainer: {
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  logoBackground: {
+    backgroundColor: '#FF6F61',
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#000',
+    marginVertical: 5,
   },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 16,
+  subtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+    textAlign: 'center',
   },
   input: {
-    width: '80%',
-    marginVertical: 10,
+    width: '100%',
+    marginVertical: 8,
+    backgroundColor: '#fff',
   },
   button: {
-    width: '80%',
-    marginVertical: 10,
-    height: '10%',
+    width: '100%',
+    marginVertical: 15,
+    paddingVertical: 8,
     justifyContent: 'center',
     backgroundColor: '#FF6F61',
+    borderRadius: 5,
+  },
+  loginContainer: {
+    marginTop: 10,
   },
   footerText: {
-    marginTop: 20,
-    color: '#333',
+    color: '#666',
+    fontSize: 14,
   },
   loginText: {
     color: '#FF6F61',
