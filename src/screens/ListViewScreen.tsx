@@ -32,6 +32,7 @@ const ListViewScreen = () => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // Track authentication status
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState({ index: -1, text: '', quantity: '1' });
+  const [totalPrice, setTotalPrice] = useState<number>(0); // State to store the total price
 
   // Check user authentication status when component mounts
   useEffect(() => {
@@ -240,6 +241,23 @@ const ListViewScreen = () => {
     }
   };
 
+  // Calculate total price of all items in the list
+  // Only include unchecked items in the total price calculation
+  const calculateTotalPrice = () => {
+    let total = 0;
+    items.forEach(item => {
+      if (item.price && !item.is_checked) {
+        total += item.price * item.quantity;
+      }
+    });
+    return total;
+  };
+  
+  // Update total price whenever items change
+  useEffect(() => {
+    setTotalPrice(calculateTotalPrice());
+  }, [items]);
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -271,47 +289,57 @@ const ListViewScreen = () => {
               <View style={styles.itemDetails}>
                 <Text style={[styles.itemText, item.is_checked && styles.checkedItemText]}>{item.name}</Text>
                 <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
-                {item.store_name && (
-                  <Text style={styles.storeInfoText}>Store: {item.store_name}</Text>
-                )}
                 {item.price && (
                   <Text style={styles.priceText}>Price: Rs. {item.price.toFixed(2)}</Text>
+                )}
+              </View>
+            </View>
+            <View style={styles.rightSection}>
+              <View style={styles.iconContainer}>
+                <IconButton
+                  icon="pencil"
+                  size={20}
+                  onPress={() => editItem(index)}
+                />
+                <IconButton
+                  icon="delete"
+                  size={20}
+                  onPress={() => deleteItem(index)}
+                />
+                <Button
+                  mode="text"
+                  onPress={() => {
+                    navigation.navigate('PickItem', { 
+                      itemName: item.name,
+                      listId: listId,
+                      listName: listName
+                    });
+                  }}
+                  style={styles.viewShopsButton}
+                >
+                  View Items
+                </Button>
+              </View>
+              <View style={styles.storeInfoContainer}>
+                {item.store_name && (
+                  <Text style={styles.storeInfoText}>Store: {item.store_name}</Text>
                 )}
                 {item.distance !== null && item.distance !== undefined && (
                   <Text style={styles.distanceText}>Distance: {formatDistance(item.distance)}</Text>
                 )}
               </View>
             </View>
-            <View style={styles.iconContainer}>
-              <IconButton
-                icon="pencil"
-                size={20}
-                onPress={() => editItem(index)}
-              />
-              <IconButton
-                icon="delete"
-                size={20}
-                onPress={() => deleteItem(index)}
-              />
-              <Button
-                mode="text"
-                onPress={() => {
-                  navigation.navigate('PickItem', { 
-                    itemName: item.name,
-                    listId: listId,
-                    listName: listName
-                  });
-                }}
-                style={styles.viewShopsButton}
-              >
-                View Items
-              </Button>
-            </View>
           </View>
         )}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
       />
+      {/* Total Price Section */}
+      <View style={styles.totalPriceContainer}>
+        <Text style={styles.totalPriceLabel}>Total Price:</Text>
+        <Text style={styles.totalPriceValue}>Rs. {totalPrice.toFixed(2)}</Text>
+      </View>
+      
       {/* Bottom Section */}
       <View style={styles.bottomSection}>
         {!isLoggedIn && (
@@ -427,13 +455,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FAF3F3',
   },
+  totalPriceContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginBottom: 10,
+    padding: 15,
+    borderRadius: 8,
+    elevation: 2,
+  },
+  totalPriceLabel: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  totalPriceValue: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#FF6F61',
+  },
   header: {
     backgroundColor: '#FF6F61',
     width: '100%',
-    paddingVertical: 20,
+    paddingVertical: 60,
     alignItems: 'center',
-    borderBottomLeftRadius: 100,
-    borderBottomRightRadius: 100,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   title: {
     fontSize: 32,
@@ -448,59 +497,86 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     backgroundColor: '#FF6F61',
-    marginHorizontal: 5,
+    marginHorizontal: 20,
     marginBottom: 20,
-    height: 50,
+    marginTop: 10,
+    height: 48,
+    width: '90%',
     justifyContent: 'center',
+    borderRadius: 24,
+    elevation: 3,
   },
   listContent: {
-    padding: 16,
+    padding: 12,
+    paddingBottom: 80, // Add extra padding at the bottom for better scrolling experience
   },
   itemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: '#ddd',
     marginHorizontal: 16,
+    marginVertical: 4,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    elevation: 1,
   },
   itemLeftSection: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flex: 1,
   },
   itemDetails: {
     flex: 1,
-    marginLeft: 10,
+    marginLeft: 12,
+    paddingRight: 8,
   },
-  itemText: {
-    fontSize: 16,
+  rightSection: {
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
   },
-  quantityText: {
-    fontSize: 14,
-    color: '#666',
+  storeInfoContainer: {
+    alignItems: 'flex-end',
     marginTop: 4,
   },
+  itemText: {
+    fontSize: 18,
+    fontWeight: '500',
+    marginBottom: 6,
+  },
+  quantityText: {
+    fontSize: 15,
+    color: '#555',
+    marginTop: 4,
+    fontWeight: '500',
+  },
   storeInfoText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#4CAF50',
     marginTop: 2,
+    fontWeight: '500',
+    textAlign: 'right',
   },
   priceText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#FF6F61',
-    marginTop: 2,
+    marginTop: 4,
     fontWeight: 'bold',
   },
   distanceText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#2196F3',
     marginTop: 2,
+    fontWeight: '500',
+    textAlign: 'right',
   },
   checkedItemText: {
     textDecorationLine: 'line-through',
-    color: '#888',
+    color: '#aaa',
+    fontStyle: 'italic',
   },
   iconContainer: {
     flexDirection: 'row',
@@ -508,6 +584,8 @@ const styles = StyleSheet.create({
   },
   viewShopsButton: {
     marginLeft: 10,
+    borderColor: '#FF6F61',
+    borderWidth: 1,
   },
   bottomSection: {
     margin: 20,

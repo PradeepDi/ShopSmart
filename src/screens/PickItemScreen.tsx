@@ -506,10 +506,10 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FF6F61',
     width: '100%',
-    paddingVertical: 20,
+    paddingVertical: 60,
     alignItems: 'center',
-    borderBottomLeftRadius: 100,
-    borderBottomRightRadius: 100,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     marginBottom: 16,
   },
   title: {

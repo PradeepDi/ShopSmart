@@ -169,11 +169,13 @@ const CreateListScreen = () => {
             error={!isQuantityValid() && itemQuantity !== ''}
           />
           <IconButton
+            mode="contained"
             icon="plus"
-            size={24}
+            size={26}
             onPress={addItem}
             disabled={!itemName.trim() || !isQuantityValid()}
             style={styles.addButton}
+            iconColor="white"
           />
         </View>
         {!isQuantityValid() && itemQuantity !== '' && (
@@ -259,7 +261,7 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FF6F61',
     width: '100%',
-    paddingVertical: 60,
+    paddingVertical: 80,
     alignItems: 'center',
     borderBottomLeftRadius: 50,
     borderBottomRightRadius: 50,
@@ -295,7 +297,8 @@ const styles = StyleSheet.create({
   },
   addButton: {
     backgroundColor: '#FF6F61',
-    borderRadius: 5,
+    borderRadius: 4,
+    margin: 0,
   },
   errorText: {
     width: '80%',
@@ -310,6 +313,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 20,
     backgroundColor: '#FF6F61',
+    width: '100%',
   },
   itemContainer: {
     flexDirection: 'row',
