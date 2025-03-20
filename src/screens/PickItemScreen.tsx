@@ -391,7 +391,7 @@ const PickItemScreen = () => {
             {item.image_url ? (
               <Image 
                 source={{ uri: item.image_url }} 
-                style={styles.itemImage} 
+                style={styles.itemImage}
                 resizeMode="cover"
               />
             ) : (
@@ -432,34 +432,50 @@ const PickItemScreen = () => {
         </View>
       </Card.Content>
       <Card.Actions style={styles.cardActions}>
-        <Button 
-          mode="outlined" 
-          onPress={() => {
-            // Navigate to ViewLocation with store details
-            // The ViewLocationScreen will automatically display this store
-            // without requiring the user to click the Search Store button
-            navigation.navigate('ViewLocation', {
-              storeName: item.store_name,
-              storeLatitude: item.store_latitude,
-              storeLongitude: item.store_longitude
-            });
-          }} 
-          style={styles.locationButton}
-          icon="map-marker"
-        >
-          View Location
-        </Button>
-        <Button mode="contained" onPress={() => viewItemDetails(item)} style={styles.button}>
-          View Details
-        </Button>
-        <Button 
-          mode="outlined" 
-          onPress={() => pickItem(item)} 
-          style={styles.pickItemButton}
-          icon="cart-plus"
-        >
-          Pick Item
-        </Button>
+        <View style={styles.buttonContainer}>
+          <Button 
+            mode="outlined" 
+            onPress={() => {
+              // Navigate to ViewLocation with store details
+              // The ViewLocationScreen will automatically display this store
+              // without requiring the user to click the Search Store button
+              navigation.navigate('ViewLocation', {
+                storeName: item.store_name,
+                storeLatitude: item.store_latitude,
+                storeLongitude: item.store_longitude
+              });
+            }} 
+            style={styles.actionButton}
+            labelStyle={styles.buttonLabel}
+            icon={({size, color}) => (
+              <MaterialCommunityIcons name="map-marker" size={size} color={color} style={{marginRight: 20}} />
+            )}
+          >
+            View Location
+          </Button>
+          <Button 
+            mode="outlined" 
+            onPress={() => viewItemDetails(item)} 
+            style={styles.actionButton}
+            labelStyle={styles.buttonLabel}
+            icon={({size, color}) => (
+              <MaterialCommunityIcons name="information-outline" size={size} color={color} style={{marginRight: 20}} />
+            )}
+          >
+            View Details
+          </Button>
+          <Button 
+            mode="contained" 
+            onPress={() => pickItem(item)} 
+            style={[styles.actionButton, styles.primaryButton]}
+            labelStyle={styles.primaryButtonLabel}
+            icon={({size, color}) => (
+              <MaterialCommunityIcons name="cart-plus" size={size} color={color} style={{marginRight: 20}} />
+            )}
+          >
+            Pick Item
+          </Button>
+        </View>
       </Card.Actions>
     </Card>
   );
@@ -599,22 +615,41 @@ const styles = StyleSheet.create({
   outOfStock: {
     backgroundColor: '#FFEBEE',
   },
-  button: {
-    backgroundColor: '#FF6F61',
-    marginLeft: 8,
-  },
   cardActions: {
-    justifyContent: 'flex-end',
+    padding: 8,
   },
-  locationButton: {
-    borderColor: '#4CAF50',
-    borderWidth: 1,
-    marginRight: 8,
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
   },
-  pickItemButton: {
-    borderColor: '#FF9800',
+  actionButton: {
+    flex: 1,
+    marginHorizontal: 4,
+    paddingRight: 16,
+    borderRadius: 8,
     borderWidth: 1,
-    marginRight: 8,
+    borderColor: '#FF6F61',
+    height: 40,
+    justifyContent: 'center',
+  },
+  buttonLabel: {
+    fontSize: 12,
+    marginHorizontal: 0,
+    color: '#FF6F61',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  primaryButton: {
+    backgroundColor: '#FF6F61',
+    borderColor: '#FF6F61',
+  },
+  primaryButtonLabel: {
+    fontSize: 12,
+    marginHorizontal: 0,
+    color: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   marginLeft: 'auto',
   loadingContainer: {

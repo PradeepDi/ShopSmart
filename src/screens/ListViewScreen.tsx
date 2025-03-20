@@ -281,11 +281,13 @@ const ListViewScreen = () => {
         renderItem={({ item, index }) => (
           <View style={styles.itemContainer}>
             <View style={styles.itemLeftSection}>
-              <Checkbox
-                status={item.is_checked ? 'checked' : 'unchecked'}
-                onPress={() => toggleItemCheck(index)}
-                color="#FF6F61"
-              />
+              <View style={styles.checkboxContainer}>
+                <Checkbox
+                  status={item.is_checked ? 'checked' : 'unchecked'}
+                  onPress={() => toggleItemCheck(index)}
+                  color="#FF6F61"
+                />
+              </View>
               <View style={styles.itemDetails}>
                 <Text style={[styles.itemText, item.is_checked && styles.checkedItemText]}>{item.name}</Text>
                 <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
@@ -296,16 +298,22 @@ const ListViewScreen = () => {
             </View>
             <View style={styles.rightSection}>
               <View style={styles.iconContainer}>
-                <IconButton
-                  icon="pencil"
-                  size={20}
-                  onPress={() => editItem(index)}
-                />
-                <IconButton
-                  icon="delete"
-                  size={20}
-                  onPress={() => deleteItem(index)}
-                />
+                <View style={styles.iconWrapper}>
+                  <IconButton
+                    icon="pencil"
+                    size={20}
+                    onPress={() => editItem(index)}
+                    iconColor="#FF6F61"
+                  />
+                </View>
+                <View style={styles.iconWrapper}>
+                  <IconButton
+                    icon="delete"
+                    size={20}
+                    onPress={() => deleteItem(index)}
+                    iconColor="#FF6F61"
+                  />
+                </View>
                 <Button
                   mode="text"
                   onPress={() => {
@@ -316,6 +324,7 @@ const ListViewScreen = () => {
                     });
                   }}
                   style={styles.viewShopsButton}
+                  textColor="#FF6F61"
                 >
                   View Items
                 </Button>
@@ -380,17 +389,23 @@ const ListViewScreen = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Add New Item</Text>
             <TextInput
-              label="Item Name"
+              placeholder="Item Name"
               value={newItem}
               onChangeText={setNewItem}
               style={styles.textInput}
+              mode="outlined"
+              outlineColor="#e0e0e0"
+              activeOutlineColor="#4169e1"
             />
             <TextInput
-              label="Quantity"
+              placeholder="Quantity"
               value={newItemQuantity}
               onChangeText={setNewItemQuantity}
               keyboardType="numeric"
               style={styles.textInput}
+              mode="outlined"
+              outlineColor="#e0e0e0"
+              activeOutlineColor="#4169e1"
               error={!isQuantityValid(newItemQuantity) && newItemQuantity !== ''}
             />
             {!isQuantityValid(newItemQuantity) && newItemQuantity !== '' && (
@@ -416,17 +431,23 @@ const ListViewScreen = () => {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Edit Item</Text>
             <TextInput
-              label="Item Name"
+              placeholder="Item Name"
               value={editingItem.text}
               onChangeText={(text) => setEditingItem({ ...editingItem, text })}
               style={styles.textInput}
+              mode="outlined"
+              outlineColor="#e0e0e0"
+              activeOutlineColor="#4169e1"
             />
             <TextInput
-              label="Quantity"
+              placeholder="Quantity"
               value={editingItem.quantity}
               onChangeText={(quantity) => setEditingItem({ ...editingItem, quantity })}
               keyboardType="numeric"
               style={styles.textInput}
+              mode="outlined"
+              outlineColor="#e0e0e0"
+              activeOutlineColor="#4169e1"
               error={!isQuantityValid(editingItem.quantity) && editingItem.quantity !== ''}
             />
             {!isQuantityValid(editingItem.quantity) && editingItem.quantity !== '' && (
@@ -465,6 +486,10 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   totalPriceLabel: {
     fontSize: 18,
@@ -500,10 +525,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
     marginTop: 10,
-    height: 48,
+    height: 45,
     width: '90%',
     justifyContent: 'center',
-    borderRadius: 24,
+    borderRadius: 8,
     elevation: 3,
   },
   listContent: {
@@ -514,24 +539,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    paddingVertical: 16,
+    paddingHorizontal: 18,
     marginHorizontal: 16,
-    marginVertical: 4,
+    marginVertical: 8,
     backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 1,
+    borderRadius: 12,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    overflow: 'hidden',
   },
   itemLeftSection: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     flex: 1,
   },
+  checkboxContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF0EF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
   itemDetails: {
     flex: 1,
-    marginLeft: 12,
+    marginLeft: 8,
     paddingRight: 8,
   },
   rightSection: {
@@ -540,12 +577,13 @@ const styles = StyleSheet.create({
   },
   storeInfoContainer: {
     alignItems: 'flex-end',
-    marginTop: 4,
+    marginTop: 8,
   },
   itemText: {
     fontSize: 18,
     fontWeight: '500',
     marginBottom: 6,
+    color: '#333',
   },
   quantityText: {
     fontSize: 15,
@@ -582,10 +620,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF0EF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
   viewShopsButton: {
     marginLeft: 10,
     borderColor: '#FF6F61',
     borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 0,
+    height: 36,
+    color: '#FF6F61',
+    justifyContent: 'center',
   },
   bottomSection: {
     margin: 20,
@@ -601,6 +654,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#FF6F61',
     marginHorizontal: 5,
+    borderRadius: 8,
     flex: 1,
   },
   modalContainer: {
@@ -610,11 +664,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    width: '80%',
+    width: '90%',
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 10,
+    borderRadius: 15,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
   },
   modalTitle: {
     fontSize: 20,
@@ -622,11 +681,16 @@ const styles = StyleSheet.create({
   },
   textInput: {
     width: '100%',
-    marginBottom: 20,
+    marginVertical: 8,
+    backgroundColor: '#fff',
   },
   modalButton: {
-    marginVertical: 5,
-    backgroundColor: '#FF6F61'
+    width: '40%',
+    marginVertical: 8,
+    paddingVertical: 2,
+    justifyContent: 'center',
+    backgroundColor: '#FF6F61',
+    borderRadius: 8,
   },
   loggedInSpacer: {
     height: 30,

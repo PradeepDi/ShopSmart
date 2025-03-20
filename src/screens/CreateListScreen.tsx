@@ -145,27 +145,33 @@ const CreateListScreen = () => {
           </View>
         )}
         <TextInput
-          label="List Name"
-          mode="outlined"
+          placeholder="List Name"
           value={listName}
           onChangeText={setListName}
           style={styles.input}
+          mode="outlined"
+          outlineColor="#e0e0e0"
+          activeOutlineColor="#FF6F61"
         />
         <View style={styles.inputRow}>
           <TextInput
-            label="Add Item"
-            mode="outlined"
+            placeholder="Add Item"
             value={itemName}
             onChangeText={setItemName}
             style={styles.itemNameInput}
+            mode="outlined"
+            outlineColor="#e0e0e0"
+            activeOutlineColor="#FF6F61"
           />
           <TextInput
-            label="Qty"
-            mode="outlined"
+            placeholder="Qty"
             value={itemQuantity}
             onChangeText={setItemQuantity}
             keyboardType="numeric"
             style={styles.quantityInput}
+            mode="outlined"
+            outlineColor="#e0e0e0"
+            activeOutlineColor="#FF6F61"
             error={!isQuantityValid() && itemQuantity !== ''}
           />
           <IconButton
@@ -273,27 +279,30 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 20,
     alignItems: 'center',
   },
   input: {
     width: '80%',
-    marginVertical: 10,
+    marginVertical: 8,
+    backgroundColor: '#fff',
   },
   inputRow: {
     flexDirection: 'row',
     width: '80%',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 10,
+    marginVertical: 8,
   },
   itemNameInput: {
     flex: 3,
     marginRight: 8,
+    backgroundColor: '#fff',
   },
   quantityInput: {
     flex: 1,
     marginRight: 8,
+    backgroundColor: '#fff',
   },
   addButton: {
     backgroundColor: '#FF6F61',
@@ -311,9 +320,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   button: {
-    marginTop: 20,
-    backgroundColor: '#FF6F61',
     width: '100%',
+    marginVertical: 15,
+    paddingVertical: 8,
+    justifyContent: 'center',
+    backgroundColor: '#FF6F61',
+    borderRadius: 5,
   },
   itemContainer: {
     flexDirection: 'row',

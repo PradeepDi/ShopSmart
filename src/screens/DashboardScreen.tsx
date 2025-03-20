@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Image } from 'react-native';
-import { Button, IconButton } from 'react-native-paper';
+import { Button, IconButton, Badge } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient'; // Adjust the path as necessary
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -10,7 +11,7 @@ type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Da
 
 const DashboardScreen = () => {
   const navigation = useNavigation<DashboardScreenNavigationProp>();
-  const [lists, setLists] = useState<{ id: string; name: string }[]>([]);
+  const [lists, setLists] = useState<{ id: string; name: string; item_count?: number }[]>([]);
   const [profileImage, setProfileImage] = useState(require('../../assets/profile.png'));
   const [isProfileImageUrl, setIsProfileImageUrl] = useState(false);
 
@@ -69,16 +70,31 @@ const DashboardScreen = () => {
     }
 
     if (userData?.user) {
-      const { data, error } = await supabase
-        .from('lists') // Assuming you have a 'lists' table
+      // First get the lists
+      const { data: listsData, error: listsError } = await supabase
+        .from('lists')
         .select('id, name')
-        .eq('user_id', userData.user.id); // Filter by the current user's ID
+        .eq('user_id', userData.user.id);
 
-      if (error) {
-        console.error(error);
-      } else {
-        setLists(data);
+      if (listsError) {
+        console.error(listsError);
+        return;
       }
+      
+      // For each list, count the items
+      const listsWithCounts = await Promise.all(listsData.map(async (list) => {
+        const { count, error: countError } = await supabase
+          .from('items')
+          .select('id', { count: 'exact', head: true })
+          .eq('list_id', list.id);
+          
+        return {
+          ...list,
+          item_count: count || 0
+        };
+      }));
+      
+      setLists(listsWithCounts);
     }
   };
 
@@ -112,21 +128,36 @@ const DashboardScreen = () => {
       <FlatList
         data={lists}
         renderItem={({ item }) => (
-          <View style={styles.listItem}>
-            <TouchableOpacity
-              style={styles.listTextContainer}
-              onPress={() => navigation.navigate('ListView', { listId: item.id, listName: item.name })}
-            >
-              <Text style={styles.listText}>{item.name}</Text>
-            </TouchableOpacity>
-            <IconButton
-              icon="delete"
-              size={20}
-              onPress={() => deleteList(item.id)}
-            />
-          </View>
+          <TouchableOpacity
+            style={styles.listItem}
+            onPress={() => navigation.navigate('ListView', { listId: parseInt(item.id), listName: item.name })}
+            activeOpacity={0.7}
+          >
+            <View style={styles.listItemContent}>
+              <View style={styles.listIconContainer}>
+                <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#FF6F61" />
+              </View>
+              <View style={styles.listTextContainer}>
+                <Text style={styles.listText}>{item.name}</Text>
+                <Text style={styles.listItemCount}>{item.item_count || 0} items</Text>
+              </View>
+              <View style={styles.listActions}>
+                <IconButton
+                  icon="delete"
+                  iconColor="#FF6F61"
+                  size={20}
+                  onPress={(e) => {
+                    e.stopPropagation();
+                    deleteList(item.id);
+                  }}
+                  style={styles.deleteButton}
+                />
+              </View>
+            </View>
+          </TouchableOpacity>
         )}
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={styles.listContent}
       />
       <View style={styles.buttonContainer}>
         <Button
@@ -156,6 +187,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
+    marginBottom: 16,
   },
   title: {
     fontSize: 32,
@@ -165,33 +197,81 @@ const styles = StyleSheet.create({
   profileIconContainer: {
     borderRadius: 25,
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   profileIcon: {
     width: 50,
     height: 50,
     borderRadius: 25,
   },
+  listContent: {
+    padding: 12,
+    paddingBottom: 80, // Add extra padding at the bottom for better scrolling experience
+  },
   listItem: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    overflow: 'hidden',
+  },
+  listItemContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    marginBottom: 8,
+  },
+  listIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF0EF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   listTextContainer: {
     flex: 1,
+    paddingRight: 8,
   },
   listText: {
     fontSize: 18,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 4,
+  },
+  listItemCount: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '400',
+  },
+  listActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  deleteButton: {
+    margin: 0,
+    backgroundColor: '#FFF0EF',
   },
   buttonContainer: {
-    marginTop: 'auto',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     padding: 16,
+    backgroundColor: '#FAF3F3',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
   button: {
     backgroundColor: '#FF6F61',
+    borderRadius: 8,
+    paddingVertical: 4,
   },
 });
 

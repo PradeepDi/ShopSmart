@@ -705,10 +705,12 @@ const styles = StyleSheet.create({
   refreshButton: {
     backgroundColor: '#FF6F61',
     marginTop: 10,
+    borderRadius: 8,
   },
   searchButton: {
     backgroundColor: '#4CAF50',
     marginTop: 10,
+    borderRadius: 8,
   },
   searchingContainer: {
     flexDirection: 'row',

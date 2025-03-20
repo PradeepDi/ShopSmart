@@ -139,7 +139,7 @@ const ViewParkingScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Parking Location</Text>
+        <Text style={styles.title}>Parking Locations</Text>
       </View>
       
       {loading ? (
@@ -289,10 +289,10 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor: '#FF6F61',
     width: '100%',
-    paddingVertical: 20,
+    paddingVertical: 60,
     alignItems: 'center',
-    borderBottomLeftRadius: 100,
-    borderBottomRightRadius: 100,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
     marginBottom: 16,
   },
   title: {
@@ -345,14 +345,17 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     backgroundColor: '#FF6F61',
+    borderRadius: 8,
   },
   refreshButton: {
     backgroundColor: '#FF6F61',
     marginTop: 10,
+    borderRadius: 8,
   },
   searchButton: {
     backgroundColor: '#4CAF50',
     marginTop: 10,
+    borderRadius: 8,
   },
   searchingContainer: {
     flexDirection: 'row',
