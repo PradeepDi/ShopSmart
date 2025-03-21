@@ -331,8 +331,8 @@ const ProfileScreen = () => {
                 onChangeText={setNewName}
                 style={styles.nameInput}
                 mode="outlined"
-                outlineColor="#e0e0e0"
-                activeOutlineColor="#4169e1"
+                outlineColor="#b5b1b1"
+                activeOutlineColor="#FF6F61"
               />
               <View style={styles.editButtonsContainer}>
                 <Button

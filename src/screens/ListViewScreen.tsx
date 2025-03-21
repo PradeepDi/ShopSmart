@@ -305,7 +305,7 @@ const ListViewScreen = () => {
         mode="contained"
         style={styles.searchButton}
         onPress={() => {
-          // Handle search by image logic
+          navigation.navigate('SearchByImage', { listId, listName });
         }}
       >
         Search by Image
