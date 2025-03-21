@@ -371,6 +371,8 @@ const cameraRef = useRef<CameraView>(null);
             style={styles.input}
             mode="outlined"
             error={!!nameError}
+            outlineColor="#b5b1b1"
+            activeOutlineColor="#FF6F61"
           />
           {nameError ? <HelperText type="error">{nameError}</HelperText> : null}
           
@@ -382,6 +384,8 @@ const cameraRef = useRef<CameraView>(null);
             style={styles.input}
             mode="outlined"
             error={!!priceError}
+            outlineColor="#b5b1b1"
+            activeOutlineColor="#FF6F61"
           />
           {priceError ? <HelperText type="error">{priceError}</HelperText> : null}
           
@@ -393,6 +397,8 @@ const cameraRef = useRef<CameraView>(null);
             mode="outlined"
             multiline
             numberOfLines={5}
+            outlineColor="#b5b1b1"
+            activeOutlineColor="#FF6F61"
           />
           
           <View style={styles.stockContainer}>
@@ -463,8 +469,8 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   itemImage: {
-    width: 150,
-    height: 150,
+    width: 250,
+    height: 250,
     borderRadius: 10,
     marginBottom: 10,
   },
@@ -476,6 +482,7 @@ const styles = StyleSheet.create({
   imageButton: {
     flex: 1,
     marginHorizontal: 5,
+    borderRadius: 8,
   },
   input: {
     width: '80%',
@@ -502,6 +509,8 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     marginHorizontal: 8,
+    borderRadius: 8,
+    borderColor: '#FF6F61',
   },
   // Camera styles
   cameraContainer: {

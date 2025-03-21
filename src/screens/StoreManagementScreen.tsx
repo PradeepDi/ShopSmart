@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Text, Image } from 'react-native';
-import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextInput, Portal, Dialog, Provider, Chip } from 'react-native-paper';
+import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextInput, Portal, Dialog, Provider, Chip, Searchbar } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
@@ -24,6 +24,8 @@ export const StoreManagementScreen = () => {
   const { storeId } = route.params as RouteParams;
   
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [filteredInventory, setFilteredInventory] = useState<InventoryItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [storeName, setStoreName] = useState('');
   const [loading, setLoading] = useState(true);
   const [editingItem, setEditingItem] = useState<string | null>(null);
@@ -35,6 +37,19 @@ export const StoreManagementScreen = () => {
     fetchStoreDetails();
     fetchInventory();
   }, []);
+
+  // Filter inventory items when search query changes
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredInventory(inventory);
+    } else {
+      const query = searchQuery.toLowerCase().trim();
+      const filtered = inventory.filter(item => 
+        item.item_name.toLowerCase().includes(query)
+      );
+      setFilteredInventory(filtered);
+    }
+  }, [searchQuery, inventory]);
 
   // Add useFocusEffect to refresh inventory when screen comes into focus
   useFocusEffect(
@@ -57,6 +72,10 @@ export const StoreManagementScreen = () => {
     } catch (error) {
       console.error('Error fetching store details:', error);
     }
+  };
+
+  const onChangeSearch = (query: string) => {
+    setSearchQuery(query);
   };
 
   const fetchInventory = async () => {
@@ -88,6 +107,7 @@ export const StoreManagementScreen = () => {
       })) || [];
       
       setInventory(formattedData);
+      setFilteredInventory(formattedData);
     } catch (error) {
       console.error('Error fetching inventory:', error);
       Alert.alert('Error', 'Failed to load inventory items');
@@ -191,11 +211,23 @@ export const StoreManagementScreen = () => {
           <Text style={styles.title}>{storeName} - Inventory</Text>
         </View>
         
+        <View style={styles.searchContainer}>
+          <Searchbar
+            placeholder="Search items"
+            onChangeText={onChangeSearch}
+            value={searchQuery}
+            style={styles.searchBar}
+            iconColor="#FF6F61"
+          />
+        </View>
+        
         <ScrollView style={styles.inventoryList}>
           {inventory.length === 0 && !loading ? (
             <Paragraph style={styles.emptyMessage}>No items in inventory. Add some items to get started!</Paragraph>
+          ) : filteredInventory.length === 0 && searchQuery.trim() !== '' ? (
+            <Paragraph style={styles.emptyMessage}>No items match your search.</Paragraph>
           ) : (
-            inventory.map((item) => (
+            filteredInventory.map((item) => (
               <Card key={item.id} style={styles.card}>
                 <Card.Content>
                   <View style={styles.itemHeader}>
@@ -211,18 +243,37 @@ export const StoreManagementScreen = () => {
                             keyboardType="decimal-pad"
                             style={styles.priceInput}
                             mode="outlined"
+                            outlineColor="#a8a7a7"
+                            activeOutlineColor="#FF6F61"
                           />
-                          <IconButton icon="check" onPress={() => savePrice(item.id)} />
-                          <IconButton icon="close" onPress={cancelEditing} />
+                          <View style={styles.iconWrapper}>
+                            <IconButton 
+                              icon="check" 
+                              size={20} 
+                              onPress={() => savePrice(item.id)} 
+                              iconColor="#FF6F61"
+                            />
+                          </View>
+                          <View style={styles.iconWrapper}>
+                            <IconButton 
+                              icon="close" 
+                              size={20} 
+                              onPress={cancelEditing} 
+                              iconColor="#FF6F61"
+                            />
+                          </View>
                         </View>
                       ) : (
                         <View style={styles.priceContainer}>
                           <Text style={styles.price}>Rs. {item.price.toFixed(2)}</Text>
-                          <IconButton 
-                            icon="pencil" 
-                            size={20} 
-                            onPress={() => startEditingPrice(item.id, item.price)} 
-                          />
+                          <View style={styles.iconWrapper}>
+                            <IconButton 
+                              icon="pencil" 
+                              size={20} 
+                              onPress={() => startEditingPrice(item.id, item.price)} 
+                              iconColor="#FF6F61"
+                            />
+                          </View>
                         </View>
                       )}
                     </View>
@@ -250,17 +301,6 @@ export const StoreManagementScreen = () => {
                   <View style={styles.buttonContainer}>
                     <Button 
                       mode="outlined" 
-                      onPress={() => navigation.navigate('ViewItem', { item })}
-                      style={styles.actionButton}
-                      labelStyle={styles.buttonLabel}
-                      icon={({size, color}) => (
-                        <MaterialCommunityIcons name="information-outline" size={size} color={color} style={{marginRight: 20}} />
-                      )}
-                    >
-                      View Details
-                    </Button>
-                    <Button 
-                      mode="outlined" 
                       onPress={() => toggleStockStatus(item.id, item.stock_status)}
                       style={styles.actionButton}
                       labelStyle={styles.buttonLabel}
@@ -269,6 +309,17 @@ export const StoreManagementScreen = () => {
                       )}
                     >
                       Toggle Stock
+                    </Button>
+                    <Button 
+                      mode="outlined" 
+                      onPress={() => navigation.navigate('ViewItem', { item })}
+                      style={styles.actionButton}
+                      labelStyle={styles.buttonLabel}
+                      icon={({size, color}) => (
+                        <MaterialCommunityIcons name="information-outline" size={size} color={color} style={{marginRight: 20}} />
+                      )}
+                    >
+                      View Details
                     </Button>
                     <Button 
                       mode="contained" 
@@ -321,6 +372,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAF3F3',
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
+  },
+  searchBar: {
+    borderRadius: 8,
+    elevation: 2,
+    backgroundColor: '#fff',
   },
   header: {
     backgroundColor: '#FF6F61',
@@ -390,6 +451,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#fcd4d2',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 4,
+    marginRight: 20,
+  },
   stockContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -450,8 +521,9 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     margin: 16,
-    right: 0,
-    bottom: 0,
+    right: 10,
+    bottom: 10,
     backgroundColor: '#FF6F61',
+    borderRadius: 8,
   },
 });

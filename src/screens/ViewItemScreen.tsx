@@ -360,6 +360,8 @@ export const ViewItemScreen = () => {
                 style={styles.input}
                 mode="outlined"
                 error={!!nameError}
+                outlineColor="#b5b1b1"
+                activeOutlineColor="#FF6F61"
               />
               {nameError ? <HelperText type="error">{nameError}</HelperText> : null}
               
@@ -371,6 +373,8 @@ export const ViewItemScreen = () => {
                 style={styles.input}
                 mode="outlined"
                 error={!!priceError}
+                outlineColor="#b5b1b1"
+                activeOutlineColor="#FF6F61"
               />
               {priceError ? <HelperText type="error">{priceError}</HelperText> : null}
               
@@ -382,6 +386,8 @@ export const ViewItemScreen = () => {
                 mode="outlined"
                 multiline
                 numberOfLines={5}
+                outlineColor="#b5b1b1"
+                activeOutlineColor="#FF6F61"
               />
               
               <View style={styles.stockContainer}>
@@ -414,7 +420,7 @@ export const ViewItemScreen = () => {
               
               {description ? (
                 <View style={styles.descriptionContainer}>
-                  <Text style={styles.descriptionLabel}>Description:</Text>
+                  <Text style={styles.descriptionLabel}>Product Details:</Text>
                   <Paragraph style={styles.descriptionText}>{description}</Paragraph>
                 </View>
               ) : (
@@ -506,7 +512,7 @@ const styles = StyleSheet.create({
   imageButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '80%',
+    width: '67%',
   },
   itemImage: {
     width: 300,
@@ -518,6 +524,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 5,
     marginBottom: 10,
+    borderRadius: 8,
   },
   // Camera styles
   cameraContainer: {
@@ -599,7 +606,8 @@ const styles = StyleSheet.create({
   },
   descriptionContainer: {
     width: '100%',
-    marginBottom: 24,
+    marginBottom: 16,
+    alignItems: 'center',
   },
   descriptionLabel: {
     fontSize: 18,
@@ -631,11 +639,14 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     marginHorizontal: 8,
+    borderRadius: 8,
+    borderColor: '#FF6F61',
   },
   updateButton: {
     marginTop: 16,
     width: '80%',
     marginBottom: 8,
+    borderRadius: 8,
   },
   backButton: {
     marginTop: 8,
