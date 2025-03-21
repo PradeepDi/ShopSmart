@@ -272,6 +272,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6F61',
     borderRadius: 8,
     paddingVertical: 4,
+    width: '100%',
+    alignSelf: 'center',
+    marginBottom: 18,
   },
 });
 

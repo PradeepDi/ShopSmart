@@ -150,7 +150,7 @@ const CreateListScreen = () => {
           onChangeText={setListName}
           style={styles.input}
           mode="outlined"
-          outlineColor="#e0e0e0"
+          outlineColor="#b5b1b1"
           activeOutlineColor="#FF6F61"
         />
         <View style={styles.inputRow}>
@@ -160,7 +160,7 @@ const CreateListScreen = () => {
             onChangeText={setItemName}
             style={styles.itemNameInput}
             mode="outlined"
-            outlineColor="#e0e0e0"
+            outlineColor="#b5b1b1"
             activeOutlineColor="#FF6F61"
           />
           <TextInput
@@ -170,7 +170,7 @@ const CreateListScreen = () => {
             keyboardType="numeric"
             style={styles.quantityInput}
             mode="outlined"
-            outlineColor="#e0e0e0"
+            outlineColor="#b5b1b1"
             activeOutlineColor="#FF6F61"
             error={!isQuantityValid() && itemQuantity !== ''}
           />
