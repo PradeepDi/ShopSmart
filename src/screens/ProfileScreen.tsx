@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, Alert, Platform } from 'react-native';
-import { Button } from 'react-native-paper';
+import { View, Text, StyleSheet, Image, Alert, Platform, TouchableOpacity } from 'react-native';
+import { Button, Provider, IconButton, TextInput } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../supabaseClient';
 import * as FileSystem from 'expo-file-system';
@@ -12,6 +13,8 @@ const ProfileScreen = () => {
   const [userName, setUserName] = useState('Loading...');
   const [userEmail, setUserEmail] = useState('Loading...');
   const [profileImage, setProfileImage] = useState(require('../../assets/profile.png'));
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [newName, setNewName] = useState('');
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -46,6 +49,51 @@ const ProfileScreen = () => {
 
     fetchUserProfile();
   }, []);
+
+  const handleEditName = () => {
+    setNewName(userName);
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!newName.trim()) {
+      Alert.alert('Error', 'Name cannot be empty');
+      return;
+    }
+
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData?.user) {
+        Alert.alert('Error', 'Unable to retrieve user information.');
+        return;
+      }
+
+      const userId = userData.user.id;
+
+      // Update the name in the database
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ name: newName })
+        .eq('id', userId);
+
+      if (updateError) {
+        console.error('Profile update error:', updateError);
+        Alert.alert('Error', updateError.message || 'An unknown error occurred while updating name.');
+      } else {
+        setUserName(newName);
+        Alert.alert('Success', 'Name updated successfully!');
+        setIsEditingName(false);
+      }
+    } catch (error) {
+      console.error('Error in handleSaveName:', error);
+      Alert.alert('Error', 'There was a problem updating your name. Please try again.');
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingName(false);
+  };
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -253,60 +301,193 @@ const ProfileScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Image
-        source={typeof profileImage === 'string' ? { uri: profileImage } : profileImage}
-        style={styles.profileImage}
-      />
-      <Button
-        mode="contained"
-        onPress={handleImagePicker}
-        style={styles.updateButton}
+    <Provider>
+      <LinearGradient
+        colors={['#FF6F61', '#f5f0e8']}
+        style={styles.container}
       >
-        Update Photo
-      </Button>
-      <Text style={styles.name}>{userName}</Text>
-      <Text style={styles.email}>{userEmail}</Text>
-      <Button
-        mode="contained"
-        onPress={handleLogout}
-        style={styles.logoutButton}
-      >
-        Logout
-      </Button>
-    </View>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile</Text>
+        </View>
+
+        <View style={styles.card}>
+          <Image
+            source={typeof profileImage === 'string' ? { uri: profileImage } : profileImage}
+            style={styles.profileImage}
+          />
+          <Button
+            mode="contained"
+            onPress={handleImagePicker}
+            style={styles.updateButton}
+          >
+            Update Photo
+          </Button>
+          
+          {isEditingName ? (
+            <View style={styles.editNameContainer}>
+              <TextInput
+                label="Name"
+                value={newName}
+                onChangeText={setNewName}
+                style={styles.nameInput}
+                mode="outlined"
+                outlineColor="#e0e0e0"
+                activeOutlineColor="#4169e1"
+              />
+              <View style={styles.editButtonsContainer}>
+                <Button
+                  mode="contained"
+                  onPress={handleSaveName}
+                  style={styles.saveButton}
+                >
+                  Save
+                </Button>
+                <Button
+                  mode="outlined"
+                  onPress={handleCancelEdit}
+                  style={styles.cancelButton}
+                  textColor="#FF6F61"
+                >
+                  Cancel
+                </Button>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.nameContainer}>
+              <Text style={styles.name}>{userName}</Text>
+              <View style={styles.iconWrapper}>
+                <IconButton
+                  icon="pencil"
+                  size={20}
+                  onPress={handleEditName}
+                  iconColor="#FF6F61"
+                />
+              </View>
+            </View>
+          )}
+          
+          <Text style={styles.email}>{userEmail}</Text>
+          <Button
+            mode="contained"
+            onPress={handleLogout}
+            style={styles.logoutButton}
+          >
+            Logout
+          </Button>
+        </View>
+      </LinearGradient>
+    </Provider>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+    padding: 20,
+  },
+  header: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    backgroundColor: '#FAF3F3',
+    alignItems: 'center',
+    width: '100%',
+    paddingTop: 80,
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  card: {
+    backgroundColor: '#fff',
+    width: '100%',
+    borderRadius: 15,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+    marginTop: 20,
   },
   profileImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
+    width: 250,
+    height: 250,
+    borderRadius: 150,
     marginBottom: 20,
+    marginTop: 60,
+    borderWidth: 3,
+    borderColor: '#FF6F61',
   },
   updateButton: {
-    marginBottom: 20,
+    marginBottom: 80,
     backgroundColor: '#FF6F61',
+    borderRadius: 8,
   },
-  name: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 10,
   },
+  name: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 40,
+    color: '#FF6F61',
+  },
+  editNameButton: {
+    marginLeft: 5,
+  },
+  editNameContainer: {
+    width: '80%',
+    marginBottom: 10,
+  },
+  nameInput: {
+    backgroundColor: '#fff',
+    marginBottom: 10,
+  },
+  editButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  saveButton: {
+    flex: 1,
+    marginRight: 5,
+    backgroundColor: '#FF6F61',
+    borderRadius: 8
+  },
+  cancelButton: {
+    flex: 1,
+    marginLeft: 5,
+    borderColor: '#FF6F61',
+    borderWidth: 1,
+    borderRadius: 8,
+  },
   email: {
-    fontSize: 18,
+    fontSize: 24,
     color: '#666',
     marginBottom: 20,
   },
   logoutButton: {
+    marginTop: 80,
+    marginBottom: 30,
     backgroundColor: '#FF6F61',
+    width: '70%',
+    borderRadius: 8,
+  },
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FFF0EF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 4,
+    marginLeft: 20,
   },
 });
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Image } from 'react-native';
-import { Button, Card, Title, Paragraph, FAB } from 'react-native-paper';
+import { Button, FAB } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
 import { useCallback } from 'react';
@@ -104,19 +105,25 @@ export const VendorDashboardScreen = () => {
           />
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.storeList}>
+      <ScrollView style={styles.storeList} contentContainerStyle={{ paddingBottom: 80 }}>
         {stores.map((store) => (
-          <Card
+          <TouchableOpacity
             key={store.id}
             style={styles.storeCard}
             onPress={() => handleStorePress(store)}
+            activeOpacity={0.7}
           >
-            <Card.Content>
-              <Title>{store.name}</Title>
-              <Paragraph>{store.address}</Paragraph>
-              <Paragraph>Contact: {store.contact}</Paragraph>
-            </Card.Content>
-          </Card>
+            <View style={styles.storeItemContent}>
+              <View style={styles.storeIconContainer}>
+                <MaterialCommunityIcons name="store" size={24} color="#FF6F61" />
+              </View>
+              <View style={styles.storeTextContainer}>
+                <Text style={styles.storeText}>{store.name}</Text>
+                <Text style={styles.storeAddress}>{store.address}</Text>
+                <Text style={styles.storeContact}>Contact: {store.contact}</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
       <FAB
@@ -143,8 +150,9 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 60,
     paddingHorizontal: 16,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 16,
   },
   title: {
     fontSize: 32,
@@ -152,28 +160,75 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   profileIconContainer: {
-    borderRadius: 25,
+    borderRadius: 50,
     overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#fff',
   },
   profileIcon: {
     width: 50,
     height: 50,
-    borderRadius: 25,
+    borderRadius: 50,
   },
   storeList: {
     flex: 1,
-    padding: 16,
+    padding: 12,
   },
   storeCard: {
-    marginBottom: 16,
     backgroundColor: '#fff',
-    borderRadius: 8,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginVertical: 8,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    overflow: 'hidden',
+  },
+  storeItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+  },
+  storeIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF0EF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  storeTextContainer: {
+    flex: 1,
+    paddingRight: 8,
+  },
+  storeText: {
+    fontSize: 18,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 4,
+  },
+  storeAddress: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '400',
+    marginBottom: 2,
+  },
+  storeContact: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '400',
   },
   fab: {
     position: 'absolute',
     margin: 16,
-    right: 0,
-    bottom: 0,
+    right: 10,
+    bottom: 10,
     backgroundColor: '#FF6F61',
+    borderRadius: 8,
+    height: 50,
+    justifyContent: 'center',
   },
 });

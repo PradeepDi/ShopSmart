@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Text, Image } from 'react-native';
-import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextInput, Portal, Dialog, Provider } from 'react-native-paper';
+import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextInput, Portal, Dialog, Provider, Chip } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
 
@@ -195,15 +196,11 @@ export const StoreManagementScreen = () => {
             <Paragraph style={styles.emptyMessage}>No items in inventory. Add some items to get started!</Paragraph>
           ) : (
             inventory.map((item) => (
-              <Card key={item.id} style={styles.itemCard}>
+              <Card key={item.id} style={styles.card}>
                 <Card.Content>
-                  <View style={styles.itemContainer}>
-                    <Image 
-                      source={item.image_url ? { uri: item.image_url } : require('../../assets/product-default.png')} 
-                      style={styles.itemImage} 
-                    />
-                    <View style={styles.itemDetails}>
-                      <Title style={styles.itemTitle} onPress={() => navigation.navigate('ViewItem', { item })}>{item.item_name}</Title>
+                  <View style={styles.itemHeader}>
+                    <View style={styles.itemInfo}>
+                      <Text style={styles.itemName} onPress={() => navigation.navigate('ViewItem', { item })}>{item.item_name}</Text>
                       
                       {editingItem === item.id ? (
                         <View style={styles.priceEditContainer}>
@@ -220,7 +217,7 @@ export const StoreManagementScreen = () => {
                         </View>
                       ) : (
                         <View style={styles.priceContainer}>
-                          <Paragraph>Price: Rs. {item.price.toFixed(2)}</Paragraph>
+                          <Text style={styles.price}>Rs. {item.price.toFixed(2)}</Text>
                           <IconButton 
                             icon="pencil" 
                             size={20} 
@@ -228,36 +225,64 @@ export const StoreManagementScreen = () => {
                           />
                         </View>
                       )}
-                      
-                      <Divider style={styles.divider} />
-                      
-                      <View style={styles.stockContainer}>
-                        <Paragraph>In Stock</Paragraph>
-                        <Switch 
-                          value={item.stock_status} 
-                          onValueChange={() => toggleStockStatus(item.id, item.stock_status)}
-                        />
-                      </View>
-                      
-                      <View style={styles.actionContainer}>
-                        <Button 
-                          mode="outlined" 
-                          onPress={() => navigation.navigate('ViewItem', { item })}
-                          style={styles.viewButton}
-                          textColor="#FF6F61"
-                        >
-                          View Details
-                        </Button>
-                        <IconButton 
-                          icon="delete" 
-                          color="#FF5252"
-                          size={20} 
-                          onPress={() => confirmDelete(item.id)} 
-                        />
-                      </View>
+                    </View>
+                    <View style={styles.imageContainer}>
+                      <Image 
+                        source={item.image_url ? { uri: item.image_url } : require('../../assets/product-default.png')} 
+                        style={styles.itemImage}
+                        resizeMode="cover"
+                      />
                     </View>
                   </View>
+                  
+                  <Divider style={styles.divider} />
+                  
+                  <View style={styles.stockContainer}>
+                    <Chip 
+                      icon={item.stock_status ? "check-circle" : "alert-circle"}
+                      style={[styles.stockChip, item.stock_status ? styles.inStock : styles.outOfStock]}
+                    >
+                      {item.stock_status ? 'In Stock' : 'Out of Stock'}
+                    </Chip>
+                  </View>
                 </Card.Content>
+                <Card.Actions style={styles.cardActions}>
+                  <View style={styles.buttonContainer}>
+                    <Button 
+                      mode="outlined" 
+                      onPress={() => navigation.navigate('ViewItem', { item })}
+                      style={styles.actionButton}
+                      labelStyle={styles.buttonLabel}
+                      icon={({size, color}) => (
+                        <MaterialCommunityIcons name="information-outline" size={size} color={color} style={{marginRight: 20}} />
+                      )}
+                    >
+                      View Details
+                    </Button>
+                    <Button 
+                      mode="outlined" 
+                      onPress={() => toggleStockStatus(item.id, item.stock_status)}
+                      style={styles.actionButton}
+                      labelStyle={styles.buttonLabel}
+                      icon={({size, color}) => (
+                        <MaterialCommunityIcons name="package-variant" size={size} color={color} style={{marginRight: 20}} />
+                      )}
+                    >
+                      Toggle Stock
+                    </Button>
+                    <Button 
+                      mode="contained" 
+                      onPress={() => confirmDelete(item.id)}
+                      style={[styles.actionButton, styles.primaryButton]}
+                      labelStyle={styles.primaryButtonLabel}
+                      icon={({size, color}) => (
+                        <MaterialCommunityIcons name="delete" size={size} color={color} style={{marginRight: 20}} />
+                      )}
+                    >
+                      Delete
+                    </Button>
+                  </View>
+                </Card.Actions>
               </Card>
             ))
           )}
@@ -302,8 +327,8 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 60,
     paddingHorizontal: 16,
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   title: {
     fontSize: 32,
@@ -314,29 +339,38 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  itemCard: {
+  card: {
     marginBottom: 16,
-    backgroundColor: '#fff',
+    elevation: 4,
     borderRadius: 8,
   },
-  itemContainer: {
+  itemHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  itemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 16,
-  },
-  itemDetails: {
+  itemInfo: {
     flex: 1,
   },
-  itemTitle: {
+  itemName: {
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 4,
-    color: '#333',
+  },
+  price: {
+    fontSize: 16,
+    color: '#FF6F61',
+    fontWeight: 'bold',
+  },
+  imageContainer: {
+    position: 'relative',
+    width: 60,
+    height: 60,
+  },
+  itemImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
   },
   divider: {
     marginVertical: 8,
@@ -360,17 +394,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  actionContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginTop: 8,
   },
-  viewButton: {
+  stockChip: {
+    height: 30,
+  },
+  inStock: {
+    backgroundColor: '#E8F5E9',
+  },
+  outOfStock: {
+    backgroundColor: '#FFEBEE',
+  },
+  cardActions: {
+    padding: 8,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  actionButton: {
     flex: 1,
-    marginRight: 8,
+    marginHorizontal: 4,
+    paddingRight: 16,
+    borderRadius: 8,
+    borderWidth: 1,
     borderColor: '#FF6F61',
+    height: 40,
+    justifyContent: 'center',
+  },
+  buttonLabel: {
+    fontSize: 12,
+    marginHorizontal: 0,
+    color: '#FF6F61',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  primaryButton: {
+    backgroundColor: '#FF6F61',
+    borderColor: '#FF6F61',
+  },
+  primaryButtonLabel: {
+    fontSize: 12,
+    marginHorizontal: 0,
+    color: '#FFFFFF',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   emptyMessage: {
     textAlign: 'center',

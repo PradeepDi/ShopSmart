@@ -81,7 +81,7 @@ const SignupScreen = () => {
             style={styles.input}
             mode="outlined"
             outlineColor="#e0e0e0"
-            activeOutlineColor="#4169e1"
+            activeOutlineColor="#FF6F61"
           />
           <TextInput
             placeholder="Email"
@@ -90,7 +90,7 @@ const SignupScreen = () => {
             style={styles.input}
             mode="outlined"
             outlineColor="#e0e0e0"
-            activeOutlineColor="#4169e1"
+            activeOutlineColor="#FF6F61"
             keyboardType="email-address"
             autoCapitalize="none"
           />
@@ -101,7 +101,7 @@ const SignupScreen = () => {
             style={styles.input}
             mode="outlined"
             outlineColor="#e0e0e0"
-            activeOutlineColor="#4169e1"
+            activeOutlineColor="#FF6F61"
             secureTextEntry={!passwordVisible}
             right={<TextInput.Icon 
               icon={passwordVisible ? "eye-off" : "eye"} 
@@ -115,7 +115,7 @@ const SignupScreen = () => {
             onChangeText={setConfirmPassword}
             mode="outlined"
             outlineColor="#e0e0e0"
-            activeOutlineColor="#4169e1"
+            activeOutlineColor="#FF6F61"
             secureTextEntry={!confirmPasswordVisible}
             style={styles.input}
             right={<TextInput.Icon 

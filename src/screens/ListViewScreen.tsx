@@ -314,23 +314,20 @@ const ListViewScreen = () => {
         data={items}
         renderItem={({ item, index }) => (
           <View style={styles.itemContainer}>
-            <View style={styles.itemLeftSection}>
-              <View style={styles.checkboxContainer}>
-                <Checkbox
-                  status={item.is_checked ? 'checked' : 'unchecked'}
-                  onPress={() => toggleItemCheck(index)}
-                  color="#FF6F61"
-                />
+            {/* Top Section */}
+            <View style={styles.topSection}>
+              <View style={styles.itemLeftSection}>
+                <View style={styles.checkboxContainer}>
+                  <Checkbox
+                    status={item.is_checked ? 'checked' : 'unchecked'}
+                    onPress={() => toggleItemCheck(index)}
+                    color="#FF6F61"
+                  />
+                </View>
+                <View style={styles.itemDetails}>
+                  <Text style={[styles.itemText, item.is_checked && styles.checkedItemText]}>{item.name}</Text>
+                </View>
               </View>
-              <View style={styles.itemDetails}>
-                <Text style={[styles.itemText, item.is_checked && styles.checkedItemText]}>{item.name}</Text>
-                <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
-                {item.price && (
-                  <Text style={styles.priceText}>Price: Rs. {item.price.toFixed(2)}</Text>
-                )}
-              </View>
-            </View>
-            <View style={styles.rightSection}>
               <View style={styles.iconContainer}>
                 <View style={styles.iconWrapper}>
                   <IconButton
@@ -358,29 +355,44 @@ const ListViewScreen = () => {
                     />
                   </View>
                 )}
-                <Button
-                  mode="text"
-                  onPress={() => {
-                    navigation.navigate('PickItem', { 
-                      itemName: item.name,
-                      listId: listId,
-                      listName: listName
-                    });
-                  }}
-                  style={styles.viewShopsButton}
-                  textColor="#FF6F61"
-                >
-                  View Items
-                </Button>
               </View>
-              <View style={styles.storeInfoContainer}>
-                {item.store_name && (
-                  <Text style={styles.storeInfoText}>Store: {item.store_name}</Text>
-                )}
-                {item.distance !== null && item.distance !== undefined && (
-                  <Text style={styles.distanceText}>Distance: {formatDistance(item.distance)}</Text>
-                )}
+            </View>
+            
+            {/* Divider */}
+            <View style={styles.divider} />
+            
+            {/* Bottom Section */}
+            <View style={styles.bottomItemSection}>
+              <View style={styles.itemInfoSection}>
+                <View style={styles.leftInfoContainer}>
+                  <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
+                  {item.price && (
+                    <Text style={styles.priceText}>Price: Rs. {item.price.toFixed(2)}</Text>
+                  )}
+                </View>
+                <View style={styles.storeInfoContainer}>
+                  {item.store_name && (
+                    <Text style={styles.storeInfoText}>Store: {item.store_name}</Text>
+                  )}
+                  {item.distance !== null && item.distance !== undefined && (
+                    <Text style={styles.distanceText}>Distance: {formatDistance(item.distance)}</Text>
+                  )}
+                </View>
               </View>
+              <Button
+                mode="text"
+                onPress={() => {
+                  navigation.navigate('PickItem', { 
+                    itemName: item.name,
+                    listId: listId,
+                    listName: listName
+                  });
+                }}
+                style={styles.viewShopsButton}
+                textColor="#FF6F61"
+              >
+                View Items
+              </Button>
             </View>
           </View>
         )}
@@ -580,9 +592,7 @@ const styles = StyleSheet.create({
     paddingBottom: 80, // Add extra padding at the bottom for better scrolling experience
   },
   itemContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     paddingVertical: 16,
     paddingHorizontal: 18,
     marginHorizontal: 16,
@@ -596,9 +606,32 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     overflow: 'hidden',
   },
+  topSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingBottom: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    width: '100%',
+    marginVertical: 8,
+  },
+  bottomItemSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    paddingTop: 8,
+  },
+  itemInfoSection: {
+    flex: 1,
+  },
   itemLeftSection: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flex: 1,
   },
   checkboxContainer: {
@@ -615,13 +648,21 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     paddingRight: 8,
   },
-  rightSection: {
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
+  itemInfoSection: {
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
+  leftInfoContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginBottom: 4,
   },
   storeInfoContainer: {
-    alignItems: 'flex-end',
-    marginTop: 8,
+    alignItems: 'flex-start',
+    marginTop: 4,
   },
   itemText: {
     fontSize: 18,
@@ -640,12 +681,14 @@ const styles = StyleSheet.create({
     color: '#4CAF50',
     marginTop: 2,
     fontWeight: '500',
-    textAlign: 'right',
+    textAlign: 'left',
   },
   priceText: {
     fontSize: 14,
     color: '#FF6F61',
     marginTop: 4,
+    marginRight: 10,
+    marginLeft: 10,
     fontWeight: 'bold',
   },
   distanceText: {
@@ -653,7 +696,7 @@ const styles = StyleSheet.create({
     color: '#2196F3',
     marginTop: 2,
     fontWeight: '500',
-    textAlign: 'right',
+    textAlign: 'left',
   },
   checkedItemText: {
     textDecorationLine: 'line-through',

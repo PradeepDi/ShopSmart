@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   profileIconContainer: {
-    borderRadius: 25,
+    borderRadius: 50,
     overflow: 'hidden',
     borderWidth: 2,
     borderColor: '#fff',
@@ -203,7 +203,7 @@ const styles = StyleSheet.create({
   profileIcon: {
     width: 50,
     height: 50,
-    borderRadius: 25,
+    borderRadius: 50,
   },
   listContent: {
     padding: 12,

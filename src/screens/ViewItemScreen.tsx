@@ -483,8 +483,8 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 60,
     alignItems: 'center',
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   title: {
     fontSize: 32,
@@ -509,8 +509,8 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   itemImage: {
-    width: 200,
-    height: 200,
+    width: 300,
+    height: 300,
     borderRadius: 10,
     marginBottom: 10,
   },
@@ -641,6 +641,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     width: '80%',
     borderColor: '#FF6F61',
+    borderRadius: 8,
   },
 });
 

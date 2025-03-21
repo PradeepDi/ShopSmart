@@ -66,7 +66,7 @@ const LoginScreen = () => {
             style={styles.input}
             mode="outlined"
             outlineColor="#e0e0e0"
-            activeOutlineColor="#4169e1"
+            activeOutlineColor="#FF6F61"
           />
           
           <View style={styles.passwordContainer}>
@@ -78,7 +78,7 @@ const LoginScreen = () => {
               style={[styles.input, {marginBottom: 0}]}
               mode="outlined"
               outlineColor="#e0e0e0"
-              activeOutlineColor="#4169e1"
+              activeOutlineColor="#FF6F61"
               right={<TextInput.Icon 
                 icon={passwordVisible ? "eye-off" : "eye"} 
                 onPress={() => setPasswordVisible(!passwordVisible)}

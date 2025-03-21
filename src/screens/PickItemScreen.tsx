@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, FlatList, ActivityIndicator, Image } from 'react-native';
-import { Button, Card, Divider, Chip } from 'react-native-paper';
+import { Button, Card, Divider, Chip, Searchbar } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
@@ -34,6 +34,8 @@ const PickItemScreen = () => {
   const { itemName } = route.params;
   
   const [items, setItems] = useState<ShopItem[]>([]);
+  const [filteredItems, setFilteredItems] = useState<ShopItem[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
@@ -58,6 +60,20 @@ const PickItemScreen = () => {
       }
     };
   }, []);
+  
+  // Filter items when search query changes or items are updated
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredItems(items);
+    } else {
+      const query = searchQuery.toLowerCase().trim();
+      const filtered = items.filter(item => 
+        item.name.toLowerCase().includes(query) || 
+        (item.store_name && item.store_name.toLowerCase().includes(query))
+      );
+      setFilteredItems(filtered);
+    }
+  }, [searchQuery, items]);
   
   // Add a separate useEffect to update distances when userLocation is set
   useEffect(() => {
@@ -269,9 +285,11 @@ const PickItemScreen = () => {
         });
   
         setItems(formattedItems);
+        setFilteredItems(formattedItems);
       } else {
         // No items found
         setItems([]);
+        setFilteredItems([]);
       }
     } catch (err) {
       console.error('Error fetching items:', err);
@@ -480,10 +498,25 @@ const PickItemScreen = () => {
     </Card>
   );
 
+  const onChangeSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Available Items: {itemName}</Text>
+      </View>
+      
+      <View style={styles.searchContainer}>
+        <Searchbar
+          placeholder="Search items or stores"
+          onChangeText={onChangeSearch}
+          value={searchQuery}
+          style={styles.searchBar}
+          iconColor="#FF6F61"
+          inputStyle={styles.searchInput}
+        />
       </View>
       
       {loading ? (
@@ -504,7 +537,7 @@ const PickItemScreen = () => {
         </View>
       ) : (
         <FlatList
-          data={items}
+          data={filteredItems}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -526,7 +559,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    marginBottom: 16,
+    marginBottom: 0,
+  },
+  searchContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FAF3F3',
+  },
+  searchBar: {
+    borderRadius: 8,
+    elevation: 2,
+    backgroundColor: '#FFFFFF',
+  },
+  searchInput: {
+    fontSize: 14,
   },
   title: {
     fontSize: 24,

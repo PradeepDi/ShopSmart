@@ -441,8 +441,8 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 60,
     alignItems: 'center',
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
   },
   title: {
     fontSize: 32,

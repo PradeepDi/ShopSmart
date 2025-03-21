@@ -15,7 +15,7 @@ export const StoreCreationScreen = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const handleCreateStore = async () => {
-    if (!name || !address || !contact) {
+    if (!name || !address || !contact || !coordinates) {
       setSnackbarMessage('Please fill in all required fields');
       setSnackbarVisible(true);
       return;
@@ -95,6 +95,8 @@ export const StoreCreationScreen = () => {
             onChangeText={setName}
             style={styles.input}
             mode="outlined"
+            outlineColor="#b5b1b1"
+            activeOutlineColor="#FF6F61"
           />
           
           <TextInput
@@ -103,6 +105,8 @@ export const StoreCreationScreen = () => {
             onChangeText={setAddress}
             style={styles.input}
             mode="outlined"
+            outlineColor="#b5b1b1"
+            activeOutlineColor="#FF6F61"
             multiline
           />
           
@@ -112,44 +116,49 @@ export const StoreCreationScreen = () => {
             onChangeText={setContact}
             style={styles.input}
             mode="outlined"
+            outlineColor="#b5b1b1"
+            activeOutlineColor="#FF6F61"
           />
           
           <TextInput
-            label="Store Coordinates"
+            label="Store Coordinates *"
             value={coordinates}
             onChangeText={setCoordinates}
             style={styles.input}
             mode="outlined"
+            outlineColor="#b5b1b1"
+            activeOutlineColor="#FF6F61"
             placeholder="e.g. 37.7749, -122.4194"
           />
           <HelperText type="info" style={styles.helperText}>
             Enter as "latitude, longitude" (e.g. 37.7749, -122.4194)
           </HelperText>
           
-          <View style={styles.buttonContainer}>
-            <Button 
-              mode="outlined" 
-              onPress={handleCancel} 
-              style={styles.button}
-              textColor='#FF6F61'
-            >
-              Cancel
-            </Button>
-            
-            <Button 
-              mode="contained" 
-              onPress={handleCreateStore} 
-              style={styles.button}
-              loading={loading}
-              disabled={loading}
-              buttonColor="#FF6F61"
-            >
-              Create Store
-            </Button>
-          </View>
+          {/* Buttons moved to bottom of screen */}
         </View>
       </ScrollView>
       
+      <View style={styles.buttonContainer}>
+        <Button 
+          mode="outlined" 
+          onPress={handleCancel} 
+          style={styles.button}
+          textColor='#FF6F61'
+        >
+          Cancel
+        </Button>
+        
+        <Button 
+          mode="contained" 
+          onPress={handleCreateStore} 
+          style={styles.button}
+          loading={loading}
+          disabled={loading}
+          buttonColor="#FF6F61"
+        >
+          Create Store
+        </Button>
+      </View>
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}
@@ -171,8 +180,9 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 60,
     alignItems: 'center',
-    borderBottomLeftRadius: 50,
-    borderBottomRightRadius: 50,
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    marginBottom: 80,
   },
   title: {
     fontSize: 32,
@@ -184,12 +194,15 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    padding: 16,
+    padding: 20,
     alignItems: 'center',
+    width: '90%',
+    alignSelf: 'center',
   },
   input: {
-    width: '80%',
-    marginVertical: 10,
+    width: '100%',
+    marginVertical: 8,
+    backgroundColor: '#fff',
   },
   helperText: {
     width: '80%',
@@ -199,11 +212,18 @@ const styles = StyleSheet.create({
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 16,
-    width: '80%',
+    width: '100%',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#FAF3F3',
+    padding: 30,
   },
   button: {
     flex: 1,
     marginHorizontal: 8,
+    borderColor: '#FF6F61',
+    borderRadius: 8,
   },
 });
