@@ -450,8 +450,8 @@ const ListViewScreen = () => {
               onChangeText={setNewItem}
               style={styles.textInput}
               mode="outlined"
-              outlineColor="#e0e0e0"
-              activeOutlineColor="#4169e1"
+              outlineColor="#b5b1b1"
+              activeOutlineColor="#FF6F61"
             />
             <TextInput
               placeholder="Quantity"
@@ -460,8 +460,8 @@ const ListViewScreen = () => {
               keyboardType="numeric"
               style={styles.textInput}
               mode="outlined"
-              outlineColor="#e0e0e0"
-              activeOutlineColor="#4169e1"
+              outlineColor="#b5b1b1"
+              activeOutlineColor="#FF6F61"
               error={!isQuantityValid(newItemQuantity) && newItemQuantity !== ''}
             />
             {!isQuantityValid(newItemQuantity) && newItemQuantity !== '' && (
@@ -561,6 +561,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FF6F61',
     width: '100%',
     paddingVertical: 60,
+    marginBottom: -20,
     alignItems: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
@@ -579,7 +580,7 @@ const styles = StyleSheet.create({
   searchButton: {
     backgroundColor: '#FF6F61',
     marginHorizontal: 20,
-    marginBottom: 20,
+    marginBottom: 10,
     marginTop: 10,
     height: 45,
     width: '90%',
