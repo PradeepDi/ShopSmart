@@ -94,7 +94,7 @@ export const VendorDashboardScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Vendor Dashboard</Text>
+        <Text style={styles.title}>ShopSmart Vendor</Text>
         <TouchableOpacity
           style={styles.profileIconContainer}
           onPress={() => navigation.navigate('Profile' as never)}

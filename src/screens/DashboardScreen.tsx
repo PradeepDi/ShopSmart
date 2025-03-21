@@ -114,7 +114,7 @@ const DashboardScreen = () => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Dashboard</Text>
+        <Text style={styles.title}>ShopSmart</Text>
         <TouchableOpacity
           style={styles.profileIconContainer}
           onPress={() => navigation.navigate('Profile')} // Navigate to Profile screen
