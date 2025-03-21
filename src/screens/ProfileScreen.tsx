@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   name: {
-    fontSize: 40,
+    fontSize: 30,
     fontWeight: 'bold',
     justifyContent: 'center',
     alignItems: 'center',
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   email: {
-    fontSize: 24,
+    fontSize: 20,
     color: '#666',
     marginBottom: 20,
   },
