@@ -182,7 +182,8 @@ const PickItemScreen = () => {
     if (!userLocation) return;
     
     setItems(currentItems => {
-      return currentItems.map(item => {
+      // First update all items with their distances
+      const updatedItems = currentItems.map(item => {
         // Skip if store doesn't have coordinates
         if (!item.store_latitude || !item.store_longitude) {
           return { ...item, distance: null, distanceLoading: false };
@@ -213,6 +214,31 @@ const PickItemScreen = () => {
         
         return { ...item, distance, distanceLoading: false };
       });
+      
+      // Then sort the updated items by distance
+      const sortedItems = [...updatedItems].sort((a, b) => {
+        // Handle null/undefined distance values (place them at the end)
+        if (a.distance === null || a.distance === undefined) return 1;
+        if (b.distance === null || b.distance === undefined) return -1;
+        return a.distance - b.distance;
+      });
+      
+      return sortedItems;
+    });
+    
+    // Also update filtered items to maintain the same sorting
+    setFilteredItems(currentFiltered => {
+      if (searchQuery.trim() === '') {
+        // If no search query, filtered items should match the sorted items
+        return [...items];
+      } else {
+        // If there's a search query, sort the filtered items by distance
+        return [...currentFiltered].sort((a, b) => {
+          if (a.distance === null || a.distance === undefined) return 1;
+          if (b.distance === null || b.distance === undefined) return -1;
+          return a.distance - b.distance;
+        });
+      }
     });
   };
 

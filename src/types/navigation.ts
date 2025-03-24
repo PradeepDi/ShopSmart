@@ -3,5 +3,4 @@ export type RootStackParamList = {
   CreateList: undefined;
   Login: undefined;
   Signup: undefined;
-  // Add other routes here as needed
 }; 
