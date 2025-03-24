@@ -284,8 +284,16 @@ const PickItemScreen = () => {
           };
         });
   
-        setItems(formattedItems);
-        setFilteredItems(formattedItems);
+        // Sort items by distance (nearest first)
+        const sortedItems = [...formattedItems].sort((a, b) => {
+          // Handle null/undefined distance values (place them at the end)
+          if (a.distance === null || a.distance === undefined) return 1;
+          if (b.distance === null || b.distance === undefined) return -1;
+          return a.distance - b.distance;
+        });
+        
+        setItems(sortedItems);
+        setFilteredItems(sortedItems);
       } else {
         // No items found
         setItems([]);

@@ -139,7 +139,7 @@ const CreateListScreen = () => {
             </Chip>
             {!isLoggedIn && (
               <Text style={styles.guestMessage}>
-                You're creating a list as a guest. You can still access this list later with the link provided after creation.
+                You're creating a list as a guest.
               </Text>
             )}
           </View>
@@ -218,14 +218,11 @@ const CreateListScreen = () => {
           {isCreating ? 'Creating...' : 'Create List'}
         </Button>
         {!isLoggedIn && (
-          <Button
-            mode="text"
-            onPress={() => navigation.navigate('Login')}
-            style={styles.loginButton}
-            textColor= "#FF6F61"
+          <Text
+            style={styles.loginText}
           >
             Login to save lists to your account
-          </Button>
+          </Text>
         )}
       </View>
     </View>
@@ -260,7 +257,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     fontSize: 12,
   },
-  loginButton: {
+  loginText: {
     marginTop: 10,
     color: '#FF6F61',
   },

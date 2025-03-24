@@ -303,10 +303,13 @@ const ListViewScreen = () => {
       {isLoggedIn && <View style={styles.loggedInSpacer} />}
       <Button
         mode="contained"
-        style={styles.searchButton}
+        style={[styles.searchButton, !isLoggedIn && styles.disabledButton]}
         onPress={() => {
-          navigation.navigate('SearchByImage', { listId, listName });
+          if (isLoggedIn) {
+            navigation.navigate('SearchByImage', { listId, listName });
+          }
         }}
+        disabled={!isLoggedIn}
       >
         Search by Image
       </Button>
@@ -382,14 +385,17 @@ const ListViewScreen = () => {
               <Button
                 mode="text"
                 onPress={() => {
-                  navigation.navigate('PickItem', { 
-                    itemName: item.name,
-                    listId: listId,
-                    listName: listName
-                  });
+                  if (isLoggedIn) {
+                    navigation.navigate('PickItem', { 
+                      itemName: item.name,
+                      listId: listId,
+                      listName: listName
+                    });
+                  }
                 }}
-                style={styles.viewShopsButton}
-                textColor="#FF6F61"
+                style={[styles.viewShopsButton, !isLoggedIn && styles.disabledTextButton]}
+                textColor={isLoggedIn ? "#FF6F61" : "#CCCCCC"}
+                disabled={!isLoggedIn}
               >
                 View Items
               </Button>
@@ -411,7 +417,11 @@ const ListViewScreen = () => {
           <Button
             mode="contained"
             style={styles.loginButton}
-            onPress={() => navigation.navigate('Login')}
+            onPress={() => {
+              // Navigate to Login screen while keeping the current list context
+              // The login screen will handle transferring ownership when the user logs in
+              navigation.navigate('Login');
+            }}
           >
             Login
           </Button>
@@ -419,15 +429,17 @@ const ListViewScreen = () => {
         <View style={styles.bottomButtons}>
           <Button
             mode="contained"
-            style={styles.button}
-            onPress={() => setModalVisible(true)}
+            style={[styles.button, !isLoggedIn && styles.disabledButton]}
+            onPress={() => isLoggedIn && setModalVisible(true)}
+            disabled={!isLoggedIn}
           >
             Add New Item
           </Button>
           <Button
             mode="contained"
-            style={styles.button}
-            onPress={() => navigation.navigate('ViewParking')}
+            style={[styles.button, !isLoggedIn && styles.disabledButton]}
+            onPress={() => isLoggedIn && navigation.navigate('ViewParking')}
+            disabled={!isLoggedIn}
           >
             View Parkings
           </Button>
@@ -573,7 +585,7 @@ const styles = StyleSheet.create({
   },
   loginPrompt: {
     textAlign: 'center',
-    marginVertical: 10,
+    marginVertical: 30,
     color: '#FF6F61',
     fontWeight: 'bold',
   },
@@ -734,6 +746,10 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: '#FF6F61',
     marginBottom: 10,
+    borderRadius: 8,
+    width: '98%',
+    justifyContent: 'center',
+    alignSelf: 'center',
   },
   bottomButtons: {
     flexDirection: 'row',
@@ -787,6 +803,13 @@ const styles = StyleSheet.create({
     color: '#B00020',
     marginBottom: 10,
     fontSize: 12,
+  },
+  disabledButton: {
+    backgroundColor: '#CCCCCC',
+    opacity: 0.7,
+  },
+  disabledTextButton: {
+    opacity: 0.5,
   }
 });
 

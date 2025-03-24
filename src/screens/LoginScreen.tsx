@@ -28,6 +28,27 @@ const LoginScreen = () => {
     } else {
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
+        // Check if we came from a list view screen with an anonymous list
+        const route = navigation.getState().routes;
+        const currentRoute = route[route.length - 1];
+        const previousRoute = route.length > 1 ? route[route.length - 2] : null;
+        
+        // If we came from ListView and have a listId, transfer ownership of that list
+        if (previousRoute && previousRoute.name === 'ListView' && previousRoute.params?.listId) {
+          const listId = previousRoute.params.listId;
+          
+          // Update the list to assign it to the logged-in user
+          const { error: updateError } = await supabase
+            .from('lists')
+            .update({ user_id: userData.user.id, is_anonymous: false })
+            .eq('id', listId)
+            .eq('is_anonymous', true);
+          
+          if (updateError) {
+            console.error('Error transferring list ownership:', updateError);
+          }
+        }
+        
         const { data: profileData } = await supabase
           .from('profiles')
           .select('user_type')
