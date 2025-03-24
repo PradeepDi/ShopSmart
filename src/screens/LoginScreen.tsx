@@ -6,7 +6,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { supabase } from '../../supabaseClient';
-import { LinearGradient } from 'expo-linear-gradient'; // Import LinearGradient
+import { LinearGradient } from 'expo-linear-gradient';
 
 type LoginScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Login'>;
 
@@ -28,12 +28,12 @@ const LoginScreen = () => {
     } else {
       const { data: userData } = await supabase.auth.getUser();
       if (userData?.user) {
-        // Check if we came from a list view screen with an anonymous list
+        // Check if came from a list view screen with an anonymous list
         const route = navigation.getState().routes;
         const currentRoute = route[route.length - 1];
         const previousRoute = route.length > 1 ? route[route.length - 2] : null;
         
-        // If we came from ListView and have a listId, transfer ownership of that list
+        // If came from ListView and have a listId, transfer ownership of that list
         if (previousRoute && previousRoute.name === 'ListView' && previousRoute.params?.listId) {
           const listId = previousRoute.params.listId;
           

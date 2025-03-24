@@ -55,7 +55,7 @@ const ViewLocationScreen = () => {
   useEffect(() => {
     // If store coordinates were passed, prioritize showing store location
     if (storeLatitude && storeLongitude) {
-      // Skip getting user location permission if we already have store coordinates
+      // Skip getting user location permission if already have store coordinates
       setLoading(false);
       // Set the location directly to the store coordinates
       setLocation({
@@ -80,7 +80,7 @@ const ViewLocationScreen = () => {
   useEffect(() => {
     // If store coordinates were passed in the route params, use them for search
     if (storeLatitude && storeLongitude) {
-      // If we have coordinates, we'll search by location
+      // If have coordinates, will search by location
       searchStoresByCoordinates(storeLatitude, storeLongitude);
       // Also set the store name as search query if available
       if (storeName) {
@@ -133,7 +133,7 @@ const ViewLocationScreen = () => {
       // Update user location
       setUserLocation(locationData);
       
-      // If we don't have store coordinates, also set as main location for map
+      // If don't have store coordinates, also set as main location for map
       if (!storeLatitude || !storeLongitude) {
         setLocation(locationData);
       }
@@ -169,7 +169,7 @@ const ViewLocationScreen = () => {
           // Update user location
           setUserLocation(locationData);
           
-          // If we don't have store coordinates, also update main location for map
+          // If don't have store coordinates, also update main location for map
           if (!storeLatitude || !storeLongitude) {
             setLocation(locationData);
           }
@@ -184,7 +184,7 @@ const ViewLocationScreen = () => {
     setLoading(true);
     // Get current location and update the map to center on user's location
     getCurrentLocation().then(() => {
-      // If we have user location, update the main location for the map
+      // If have user location, update the main location for the map
       if (userLocation) {
         setLocation(userLocation);
       }
@@ -208,7 +208,7 @@ const ViewLocationScreen = () => {
 
       let storeResult;
 
-      // If we found a store with exact coordinates in the database
+      // If found a store with exact coordinates in the database
       if (!error && data && data.length > 0) {
         const store = data[0];
         storeResult = {
@@ -341,7 +341,7 @@ const ViewLocationScreen = () => {
         .ilike('name', `%${searchQuery}%`)
         .limit(1); // Only get the first matching store
 
-      // If we have a result from the database, use it
+      // If have a result from the database, use it
       if (!error && data && data.length > 0) {
         const store = data[0];
         const storeResult = {
@@ -588,7 +588,7 @@ const ViewLocationScreen = () => {
           <Button 
             mode="contained" 
             onPress={() => {
-              // If we have coordinates from route params, use them for search
+              // If have coordinates from route params, use them for search
               if (storeLatitude && storeLongitude) {
                 searchStoresByCoordinates(storeLatitude, storeLongitude);
               } else {

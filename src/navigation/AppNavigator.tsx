@@ -15,7 +15,6 @@ import PickItemScreen from '../screens/PickItemScreen';
 import ViewParkingScreen from '../screens/ViewParkingScreen';
 import ViewLocationScreen from '../screens/ViewLocationScreen';
 import { SearchByImageScreen } from '../screens/SearchByImageScreen';
-// Import other screens as needed
 
 export type RootStackParamList = {
   Welcome: undefined;
@@ -34,7 +33,6 @@ export type RootStackParamList = {
   ViewParking: undefined;
   ViewLocation: { storeName?: string; storeLatitude?: number; storeLongitude?: number };
   SearchByImage: { listId?: number; listName?: string };
-  // Add other routes here as needed
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
@@ -61,6 +59,5 @@ export const AppNavigator = () => (
     <Stack.Screen name="ViewParking" component={ViewParkingScreen} />
     <Stack.Screen name="ViewLocation" component={ViewLocationScreen} />
     <Stack.Screen name="SearchByImage" component={SearchByImageScreen} />
-    {/* Add other screens here */}
   </Stack.Navigator>
 );

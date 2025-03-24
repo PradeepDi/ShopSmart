@@ -4,7 +4,7 @@ import { IconButton, Button, TextInput, Checkbox } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { supabase } from '../../supabaseClient'; // Adjust the path as necessary
+import { supabase } from '../../supabaseClient';
 
 type ListViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ListView'>;
 type ListViewScreenRouteProp = RouteProp<RootStackParamList, 'ListView'>;

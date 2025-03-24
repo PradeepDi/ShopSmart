@@ -191,7 +191,7 @@ const PickItemScreen = () => {
         // Create a cache key for this location pair
         const cacheKey = `${userLocation.latitude},${userLocation.longitude}-${item.store_latitude},${item.store_longitude}`;
         
-        // Check if we have a cached distance
+        // Check if have a cached distance
         if (distanceCache.current.has(cacheKey)) {
           return { 
             ...item, 
@@ -258,7 +258,7 @@ const PickItemScreen = () => {
             // Create a cache key for this location pair
             const cacheKey = `${userLocation.latitude},${userLocation.longitude}-${item.shops.latitude},${item.shops.longitude}`;
             
-            // Check if we have a cached distance
+            // Check if have a cached distance
             if (distanceCache.current.has(cacheKey)) {
               distance = distanceCache.current.get(cacheKey);
               distanceLoading = false;

@@ -62,7 +62,7 @@ const cameraRef = useRef<CameraView>(null);
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to make this work!');
+        Alert.alert('Permission Required', 'Sorry, Need camera roll permissions to make this work!');
         return;
       }
       
@@ -107,7 +107,7 @@ const cameraRef = useRef<CameraView>(null);
     try {
       console.log('Starting image upload process for URI:', uri);
       
-      // For React Native, we need to handle file:// URIs specially
+      // For React Native, Need to handle file:// URIs specially
       // First, determine MIME type
       const fileName = uri.split('/').pop() || 'unknown';
       const fileExt = fileName.split('.').pop()?.toLowerCase() || 'jpg';
@@ -180,7 +180,7 @@ const cameraRef = useRef<CameraView>(null);
           try {
             // Create a FormData object
             const formData = new FormData();
-            // In React Native, we need to use this specific format for files
+            // In React Native, Need to use this specific format for files
             const fileInfo = {
               uri: uri,
               name: fileName,

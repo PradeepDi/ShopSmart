@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Image, Dimensions, Animated } from 'react-nativ
 import { Button } from 'react-native-paper';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
-import { RootStackParamList } from '../navigation/AppNavigator'; // Adjust the path as necessary
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 type WelcomeScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Welcome'>;
 

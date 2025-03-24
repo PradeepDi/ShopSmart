@@ -44,7 +44,7 @@ export const SearchByImageScreen = () => {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Sorry, we need camera roll permissions to make this work!');
+        Alert.alert('Permission Required', 'Sorry, Need camera roll permissions to make this work!');
         return;
       }
       
@@ -89,7 +89,7 @@ export const SearchByImageScreen = () => {
     try {
       console.log('Starting image upload process for URI:', uri);
       
-      // For React Native, we need to handle file:// URIs specially
+      // For React Native, Need to handle file:// URIs specially
       // First, determine MIME type
       const fileName = uri.split('/').pop() || 'unknown';
       const fileExt = fileName.split('.').pop()?.toLowerCase() || 'jpg';
@@ -162,7 +162,7 @@ export const SearchByImageScreen = () => {
           try {
             // Create a FormData object
             const formData = new FormData();
-            // In React Native, we need to use this specific format for files
+            // In React Native, Need to use this specific format for files
             const fileInfo = {
               uri: uri,
               name: fileName,
@@ -222,7 +222,7 @@ export const SearchByImageScreen = () => {
     setLoading(true);
     try {
       // In a real app, this would call an API that performs image similarity search
-      // For this demo, we'll simulate by fetching random inventory items
+      // For this demo, will simulate by fetching random inventory items
       const { data, error } = await supabase
         .from('inventory_items')
         .select('id, name, price, shop:shop_id(name), image_url')
