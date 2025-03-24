@@ -233,17 +233,7 @@ const ViewParkingScreen = () => {
             </MapView>
           )}
           
-          <View style={styles.infoContainer}>
-            {location && (
-              <>
-                <Text style={styles.infoText}>Latitude: {location.latitude.toFixed(6)}</Text>
-                <Text style={styles.infoText}>Longitude: {location.longitude.toFixed(6)}</Text>
-                {location.accuracy && (
-                  <Text style={styles.infoText}>Accuracy: ±{location.accuracy.toFixed(2)} meters</Text>
-                )}
-              </>
-            )}
-          </View>
+
           
           {searchingParking && (
             <View style={styles.searchingContainer}>
@@ -256,25 +246,27 @@ const ViewParkingScreen = () => {
             <Text style={styles.errorText}>{parkingError}</Text>
           )}
           
-          <Button 
-            mode="contained" 
-            onPress={searchParkingLocations} 
-            style={styles.searchButton}
-            icon="parking"
-            loading={searchingParking}
-            disabled={searchingParking || !location}
-          >
-            Search Parking
-          </Button>
-          
-          <Button 
-            mode="contained" 
-            onPress={refreshLocation} 
-            style={styles.refreshButton}
-            icon="refresh"
-          >
-            Refresh Location
-          </Button>
+          <View style={styles.buttonContainer}>
+            <Button 
+              mode="contained" 
+              onPress={searchParkingLocations} 
+              style={styles.searchButton}
+              icon="parking"
+              loading={searchingParking}
+              disabled={searchingParking || !location}
+            >
+              Search Parking
+            </Button>
+            
+            <Button 
+              mode="contained" 
+              onPress={refreshLocation} 
+              style={styles.refreshButton}
+              icon="refresh"
+            >
+              Refresh Location
+            </Button>
+          </View>
         </View>
       )}
     </View>
@@ -306,21 +298,10 @@ const styles = StyleSheet.create({
   },
   map: {
     width: '100%',
-    height: '70%',
+    height: '85%',
     borderRadius: 10,
   },
-  infoContainer: {
-    backgroundColor: '#fff',
-    padding: 16,
-    borderRadius: 10,
-    marginVertical: 16,
-    elevation: 3,
-  },
-  infoText: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#333',
-  },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -352,9 +333,16 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderRadius: 8,
   },
+  buttonContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+  },
   searchButton: {
     backgroundColor: '#4CAF50',
-    marginTop: 10,
+    marginBottom: 2,
     borderRadius: 8,
   },
   searchingContainer: {

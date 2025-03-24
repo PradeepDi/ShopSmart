@@ -487,7 +487,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   searchButton: {
-    width: '80%',
+    width: '78%',
     marginVertical: 20,
     borderRadius: 8,
   },
