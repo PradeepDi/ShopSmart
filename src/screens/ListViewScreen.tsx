@@ -504,8 +504,8 @@ const ListViewScreen = () => {
               onChangeText={(text) => setEditingItem({ ...editingItem, text })}
               style={styles.textInput}
               mode="outlined"
-              outlineColor="#e0e0e0"
-              activeOutlineColor="#4169e1"
+              outlineColor="#b5b1b1"
+              activeOutlineColor="#FF6F61"
             />
             <TextInput
               placeholder="Quantity"
@@ -514,8 +514,8 @@ const ListViewScreen = () => {
               keyboardType="numeric"
               style={styles.textInput}
               mode="outlined"
-              outlineColor="#e0e0e0"
-              activeOutlineColor="#4169e1"
+              outlineColor="#b5b1b1"
+              activeOutlineColor="#FF6F61"
               error={!isQuantityValid(editingItem.quantity) && editingItem.quantity !== ''}
             />
             {!isQuantityValid(editingItem.quantity) && editingItem.quantity !== '' && (

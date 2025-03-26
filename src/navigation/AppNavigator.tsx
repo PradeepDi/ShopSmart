@@ -2,6 +2,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import WelcomeScreen from '../screens/WelcomeScreen';
 import LoginScreen from '../screens/LoginScreen';
 import SignupScreen from '../screens/SignupScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import CreateListScreen from '../screens/CreateListScreen';
 import ListViewScreen from '../screens/ListViewScreen';
 import DashboardScreen from '../screens/DashboardScreen';
@@ -22,6 +23,7 @@ export type RootStackParamList = {
   ListView: { listId: number; listName: string };
   Login: undefined;
   Signup: undefined;
+  ForgotPassword: undefined;
   Dashboard: undefined;
   Profile: undefined;
   VendorDashboard: undefined;
@@ -48,6 +50,7 @@ export const AppNavigator = () => (
     <Stack.Screen name="ListView" component={ListViewScreen} />
     <Stack.Screen name="Login" component={LoginScreen} />
     <Stack.Screen name="Signup" component={SignupScreen} />
+    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
     <Stack.Screen name="Dashboard" component={DashboardScreen} />
     <Stack.Screen name="Profile" component={ProfileScreen} />
     <Stack.Screen name="VendorDashboard" component={VendorDashboardScreen} />

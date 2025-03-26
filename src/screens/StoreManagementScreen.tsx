@@ -358,8 +358,8 @@ export const StoreManagementScreen = () => {
               <Paragraph>Are you sure you want to delete this item? This action cannot be undone.</Paragraph>
             </Dialog.Content>
             <Dialog.Actions>
-              <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
-              <Button onPress={handleDeleteItem} color="#FF5252">Delete</Button>
+              <Button onPress={() => setDeleteDialogVisible(false)} textColor="#FF5252">Cancel</Button>
+              <Button onPress={handleDeleteItem} textColor="#FF5252">Delete</Button>
             </Dialog.Actions>
           </Dialog>
         </Portal>

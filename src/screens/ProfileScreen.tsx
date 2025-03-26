@@ -476,7 +476,7 @@ const styles = StyleSheet.create({
     marginTop: 80,
     marginBottom: 30,
     backgroundColor: '#FF6F61',
-    width: '70%',
+    width: '50%',
     borderRadius: 8,
   },
   iconWrapper: {

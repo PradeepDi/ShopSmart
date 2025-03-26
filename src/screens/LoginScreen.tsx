@@ -113,11 +113,11 @@ const LoginScreen = () => {
               <Checkbox
                 status={rememberMe ? 'checked' : 'unchecked'}
                 onPress={() => setRememberMe(!rememberMe)}
-                color="#4169e1"
+                color="#FF6F61"
               />
               <Text style={styles.rememberMeText}>Remember me</Text>
             </View>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
               <Text style={styles.forgotPasswordText}>Forgot Password ?</Text>
             </TouchableOpacity>
           </View>
