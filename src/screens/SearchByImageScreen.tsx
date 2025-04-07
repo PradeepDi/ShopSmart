@@ -1,39 +1,42 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Text, Image, Platform, TouchableOpacity, FlatList } from 'react-native';
 import { Button, ActivityIndicator } from 'react-native-paper';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '../../supabaseClient';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
 import { checkApiHealth, recognizeImage } from '../utils/ApiUtils';
 import { CameraView, Camera } from 'expo-camera';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 interface RouteParams {
   listId?: number;
   listName?: string;
 }
 
-interface SearchResult {
-  id: string;
-  name: string;
-  price: number;
-  store_name: string;
-  image_url?: string;
-  distance?: number;
+// Define the navigation prop type
+type SearchByImageScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SearchByImage'>;
+type SearchByImageScreenRouteProp = RouteProp<RootStackParamList, 'SearchByImage'>;
+
+// Define the PredictionResult interface that was missing
+interface PredictionResult {
+  className: string;
+  probability: number;
 }
 
+// No need for SearchResult interface as we're navigating to PickItemScreen
+
 export const SearchByImageScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { listId, listName } = route.params as RouteParams;
+  const navigation = useNavigation<SearchByImageScreenNavigationProp>();
+  const route = useRoute<SearchByImageScreenRouteProp>();
+  const { listId, listName } = route.params;
 
   const [searchImage, setSearchImage] = useState(require('../../assets/product-default.png'));
   const [recognizedProduct, setRecognizedProduct] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
-  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
-  const [searchPerformed, setSearchPerformed] = useState(false);
   
   // Camera related states
   const [cameraPermission, setCameraPermission] = useState<boolean | null>(null);
@@ -68,9 +71,7 @@ export const SearchByImageScreen = () => {
 // Model loading is now handled in TensorflowUtils.ts
   const handleImagePicker = async () => {
     try {
-      // Clear previous search results when starting a new image selection
-      setSearchResults([]);
-      setSearchPerformed(false);
+      // Reset recognition data when starting a new image selection
       setRecognizedProduct(null);
       setConfidence(null);
       setPrediction('');
@@ -283,11 +284,14 @@ export const SearchByImageScreen = () => {
       // If we already have a recognized product from the image selection/capture process, use it
       if (recognizedProduct) {
         console.log('Using existing recognized product:', recognizedProduct);
-        // Use existing prediction
+        // Navigate to PickItemScreen with the recognized product name
         const productName = recognizedProduct.replace(/_/g, ' ');
-        await searchProductInDatabase(productName);
-        setSearchPerformed(true);
         setLoading(false);
+        navigation.navigate('PickItem', { 
+          itemName: productName,
+          listId: listId,
+          listName: listName
+        });
         return;
       }
       
@@ -324,18 +328,19 @@ export const SearchByImageScreen = () => {
         
         console.log('Top prediction:', topPrediction.className, 'with confidence:', topPrediction.probability);
         
-        // Search for items in the database that match the recognized product
+        // Format the product name and navigate to PickItemScreen
         const productName = topPrediction.className.replace(/_/g, ' ');
         setPrediction(`🧠 ${topPrediction.className} (${(topPrediction.probability * 100).toFixed(2)}%)`);
         
-        // Perform the database search
-        await searchProductInDatabase(productName);
+        // Navigate to PickItemScreen with the recognized product name
+        navigation.navigate('PickItem', { 
+          itemName: productName,
+          listId: listId,
+          listName: listName
+        });
       } else {
         Alert.alert('Recognition Failed', 'Could not recognize the product in the image.');
-        setSearchResults([]);
       }
-      
-      setSearchPerformed(true);
     } catch (error) {
       console.error('Error searching by image:', error);
       Alert.alert('Search Error', 'Failed to search using the image. Please try again.');
@@ -344,156 +349,7 @@ export const SearchByImageScreen = () => {
     }
   };
   
-  // Helper function to search for products in the database
-  const searchProductInDatabase = async (productName: string) => {
-    try {
-      console.log('Searching database for product:', productName);
-      
-      // Split the product name into keywords for better matching
-      const keywords = productName.toLowerCase().split(' ').filter(word => word.length > 2);
-      
-      // First try an exact match with the full product name
-      const { data: exactMatches, error: exactError } = await supabase
-        .from('inventory_items')
-        .select('id, name, price, shop:shop_id(name), image_url')
-        .ilike('name', `%${productName}%`)
-        .limit(10);
-
-      if (exactError) throw exactError;
-
-      if (exactMatches && exactMatches.length > 0) {
-        console.log(`Found ${exactMatches.length} exact matches for "${productName}"`);
-        
-        // Transform the data to match our SearchResult interface
-        const formattedResults = exactMatches.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          store_name: item.shop?.name || 'Unknown Store',
-          image_url: item.image_url,
-          distance: Math.random() * 5 // Simulate random distances for demo
-        }));
-
-        setSearchResults(formattedResults);
-      } else {
-        // If no exact matches, try keyword-based search
-        console.log('No exact matches found, trying keyword search with:', keywords);
-        
-        if (keywords.length > 0) {
-          // Build a query that matches any of the keywords
-          let query = supabase
-            .from('inventory_items')
-            .select('id, name, price, shop:shop_id(name), image_url');
-          
-          // Add filters for each keyword
-          keywords.forEach((keyword, index) => {
-            if (index === 0) {
-              query = query.ilike('name', `%${keyword}%`);
-            } else {
-              query = query.or(`name.ilike.%${keyword}%`);
-            }
-          });
-          
-          const { data: keywordMatches, error: keywordError } = await query.limit(15);
-          
-          if (keywordError) throw keywordError;
-          
-          if (keywordMatches && keywordMatches.length > 0) {
-            console.log(`Found ${keywordMatches.length} keyword matches`);
-            
-            const formattedResults = keywordMatches.map((item: any) => ({
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              store_name: item.shop?.name || 'Unknown Store',
-              image_url: item.image_url,
-              distance: Math.random() * 5
-            }));
-    
-            setSearchResults(formattedResults);
-          } else {
-            // If still no matches, fetch some generic items
-            console.log('No keyword matches found, fetching generic items');
-            const { data: genericData, error: genericError } = await supabase
-              .from('inventory_items')
-              .select('id, name, price, shop:shop_id(name), image_url')
-              .limit(8);
-    
-            if (genericError) throw genericError;
-    
-            const formattedResults = genericData.map((item: any) => ({
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              store_name: item.shop?.name || 'Unknown Store',
-              image_url: item.image_url,
-              distance: Math.random() * 5
-            }));
-    
-            setSearchResults(formattedResults);
-            
-            // Show a message that we're showing generic items
-            Alert.alert(
-              'No Exact Matches', 
-              `We couldn't find "${productName}" in our database. Showing you some available items instead.`,
-              [{ text: 'OK' }]
-            );
-          }
-        } else {
-          // If no valid keywords, fetch generic items
-          console.log('No valid keywords, fetching generic items');
-          const { data: genericData, error: genericError } = await supabase
-            .from('inventory_items')
-            .select('id, name, price, shop:shop_id(name), image_url')
-            .limit(8);
-  
-          if (genericError) throw genericError;
-  
-          const formattedResults = genericData.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            store_name: item.shop?.name || 'Unknown Store',
-            image_url: item.image_url,
-            distance: Math.random() * 5
-          }));
-  
-          setSearchResults(formattedResults);
-        }
-      }
-    } catch (error) {
-      console.error('Error searching database:', error);
-      Alert.alert('Search Error', 'Failed to search the database. Please try again.');
-      setSearchResults([]);
-    }
-  };
-
-  const addItemToList = async (item: SearchResult) => {
-    if (!listId) {
-      Alert.alert('Error', 'No shopping list selected');
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('items')
-        .insert([{ 
-          name: item.name, 
-          list_id: listId,
-          quantity: 1,
-          store_name: item.store_name,
-          price: item.price,
-          distance: item.distance
-        }]);
-
-      if (error) throw error;
-
-      Alert.alert('Success', `${item.name} added to your shopping list`);
-    } catch (error) {
-      console.error('Error adding item to list:', error);
-      Alert.alert('Error', 'Failed to add item to your shopping list');
-    }
-  };
+  // Search functionality is now handled by PickItemScreen
 
   // Camera component
   if (showCamera) {
@@ -518,9 +374,7 @@ export const SearchByImageScreen = () => {
               onPress={async () => {
                 if (cameraRef.current) {
                   try {
-                    // Clear previous search results when capturing a new image
-                    setSearchResults([]);
-                    setSearchPerformed(false);
+                    // Reset recognition data when capturing a new image
                     setRecognizedProduct(null);
                     setConfidence(null);
                     setPrediction('');
@@ -628,13 +482,13 @@ export const SearchByImageScreen = () => {
             buttonColor="#FF6F61"
             icon="magnify"
           >
-            Search Similar Items
+            Find Similar Items
           </Button>
           
           {loading && (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color="#FF6F61" />
-              <Text style={styles.loadingText}>Analyzing image and searching for similar items...</Text>
+              <Text style={styles.loadingText}>Analyzing image...</Text>
             </View>
           )}
           
@@ -645,56 +499,9 @@ export const SearchByImageScreen = () => {
               {confidence !== null && (
                 <Text style={styles.confidence}>Confidence: {(confidence * 100).toFixed(2)}%</Text>
               )}
-              {searchPerformed && (
-                <Text style={styles.searchInfo}>Showing items matching "{recognizedProduct.replace(/_/g, ' ')}"</Text>
-              )}
             </View>
           )}
         </View>
-        
-        {/* FlatList moved outside of ScrollView to avoid nesting warning */}
-        {searchPerformed && !loading && (
-          <View style={styles.resultsContainer}>
-            <Text style={styles.resultsTitle}>
-              {searchResults.length > 0 ? 'Search Results' : 'No items found'}
-            </Text>
-            
-            <FlatList
-              data={searchResults}
-              renderItem={({ item }) => (
-                <View style={styles.resultItem}>
-                  <View style={styles.resultImageContainer}>
-                    <Image 
-                      source={item.image_url ? { uri: item.image_url } : require('../../assets/product-default.png')} 
-                      style={styles.resultImage} 
-                    />
-                  </View>
-                  <View style={styles.resultDetails}>
-                    <Text style={styles.resultName}>{item.name}</Text>
-                    <Text style={styles.resultPrice}>Rs. {item.price.toFixed(2)}</Text>
-                    <Text style={styles.resultStore}>Store: {item.store_name}</Text>
-                    {item.distance !== undefined && (
-                      <Text style={styles.resultDistance}>Distance: {item.distance.toFixed(1)} km</Text>
-                    )}
-                  </View>
-                  <Button
-                    mode="contained"
-                    onPress={() => addItemToList(item)}
-                    style={styles.addButton}
-                    buttonColor="#FF6F61"
-                    icon="plus"
-                    disabled={!listId}
-                  >
-                    Add
-                  </Button>
-                </View>
-              )}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.resultsList}
-              ListEmptyComponent={<Text style={styles.emptyText}>No items found matching your image</Text>}
-            />
-          </View>
-        )}
       </View>
     </View>
   );
@@ -704,13 +511,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#FAF3F3',
-  },
-  searchInfo: {
-    fontSize: 14,
-    color: '#666',
-    fontStyle: 'italic',
-    marginTop: 4,
-    textAlign: 'center',
   },
   header: {
     backgroundColor: '#FF6F61',
@@ -739,8 +539,8 @@ const styles = StyleSheet.create({
     width: '80%',
   },
   itemImage: {
-    width: 200,
-    height: 150,
+    width: 250,
+    height: 250,
     borderRadius: 10,
     marginBottom: 10,
   },
@@ -748,6 +548,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
+    marginTop: 20,
   },
   imageButton: {
     flex: 1,
@@ -756,8 +557,9 @@ const styles = StyleSheet.create({
   },
   searchButton: {
     width: '78%',
-    marginVertical: 5,
+    marginVertical: 15,
     borderRadius: 8,
+    marginBottom: 40,
   },
   loadingContainer: {
     alignItems: 'center',
@@ -774,7 +576,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginVertical: 10,
-    width: '90%',
+    width: '78%',
     alignItems: 'center',
     elevation: 2,
     shadowColor: '#000',
@@ -799,78 +601,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#4CAF50',
     fontWeight: '500',
-  },
-  resultsContainer: {
-    width: '100%',
-    marginTop: 10,
-    flex: 1,
-  },
-  resultsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  resultsList: {
-    paddingBottom: 20,
-  },
-  resultItem: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 15,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    alignItems: 'center',
-  },
-  resultImageContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 10,
-    overflow: 'hidden',
-    marginRight: 15,
-  },
-  resultImage: {
-    width: '100%',
-    height: '100%',
-  },
-  resultDetails: {
-    flex: 1,
-  },
-  resultName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  resultPrice: {
-    fontSize: 14,
-    color: '#FF6F61',
-    fontWeight: 'bold',
-    marginBottom: 2,
-  },
-  resultStore: {
-    fontSize: 12,
-    color: '#4CAF50',
-  },
-  resultDistance: {
-    fontSize: 12,
-    color: '#2196F3',
-  },
-  addButton: {
-    borderRadius: 8,
-    padding: 0,
-    height: 36,
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 16,
-    color: '#666',
   },
   // Camera styles
   cameraContainer: {
