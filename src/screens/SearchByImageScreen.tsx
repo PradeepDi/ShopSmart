@@ -20,13 +20,11 @@ interface RouteParams {
 type SearchByImageScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SearchByImage'>;
 type SearchByImageScreenRouteProp = RouteProp<RootStackParamList, 'SearchByImage'>;
 
-// Define the PredictionResult interface that was missing
+// Define the PredictionResult interface 
 interface PredictionResult {
   className: string;
   probability: number;
 }
-
-// No need for SearchResult interface as we're navigating to PickItemScreen
 
 export const SearchByImageScreen = () => {
   const navigation = useNavigation<SearchByImageScreenNavigationProp>();
@@ -68,7 +66,6 @@ export const SearchByImageScreen = () => {
 
     checkBackendApi();
   }, []);
-// Model loading is now handled in TensorflowUtils.ts
   const handleImagePicker = async () => {
     try {
       // Reset recognition data when starting a new image selection
@@ -98,7 +95,7 @@ export const SearchByImageScreen = () => {
         const base64Image = asset.base64;
     
         if (!base64Image) {
-          console.error('❌ Base64 image is undefined');
+          console.error('Base64 image is undefined');
           return;
         }
 
@@ -117,13 +114,13 @@ export const SearchByImageScreen = () => {
             // Update state with prediction results
             setRecognizedProduct(label);
             setConfidence(confidenceValue);
-            setPrediction(`🧠 ${label} (${(confidenceValue * 100).toFixed(2)}%)`);
+            setPrediction(`${label} (${(confidenceValue * 100).toFixed(2)}%)`);
             setSelectedImage(asset.uri);
             
             // Set the search image to display the selected image
             setSearchImage(asset.uri);
             
-            console.log('✅ Prediction:', label, 'with confidence:', confidenceValue);
+            console.log('Prediction:', label, 'with confidence:', confidenceValue);
           }
         } catch (inferenceError) {
           console.error('Error during inference:', inferenceError);
@@ -182,7 +179,7 @@ export const SearchByImageScreen = () => {
         
         console.log('Upload successful, data:', data);
       } else {
-        // For native platforms (Android/iOS), use fetch API to get the file data
+        // For native platforms , use fetch API to get the file data
         try {
           // Read the file as base64 string first
           const base64Data = await FileSystem.readAsStringAsync(uri, {
@@ -281,7 +278,7 @@ export const SearchByImageScreen = () => {
 
     setLoading(true);
     try {
-      // If we already have a recognized product from the image selection/capture process, use it
+      // If already have a recognized product from the image selection/capture process, use it
       if (recognizedProduct) {
         console.log('Using existing recognized product:', recognizedProduct);
         // Navigate to PickItemScreen with the recognized product name
@@ -299,12 +296,11 @@ export const SearchByImageScreen = () => {
       let predictions: PredictionResult[];
       
       try {
-        // If the image is a URL (from storage), we need to use that
+        // If the image is a URL (from storage), need to use that
         if (searchImage.startsWith('http')) {
           console.log('Recognizing image from URL:', searchImage);
           predictions = await recognizeImage(searchImage);
         } else if (selectedImage) {
-          // If we have a local image URI but no prediction yet, try to recognize it
           console.log('Recognizing image from local URI:', selectedImage);
           predictions = await recognizeImage(searchImage);
         } else {
@@ -330,7 +326,7 @@ export const SearchByImageScreen = () => {
         
         // Format the product name and navigate to PickItemScreen
         const productName = topPrediction.className.replace(/_/g, ' ');
-        setPrediction(`🧠 ${topPrediction.className} (${(topPrediction.probability * 100).toFixed(2)}%)`);
+        setPrediction(`${topPrediction.className} (${(topPrediction.probability * 100).toFixed(2)}%)`);
         
         // Navigate to PickItemScreen with the recognized product name
         navigation.navigate('PickItem', { 
@@ -394,7 +390,7 @@ export const SearchByImageScreen = () => {
                             const topPrediction = predictions[0];
                             setRecognizedProduct(topPrediction.className);
                             setConfidence(topPrediction.probability);
-                            setPrediction(`🧠 ${topPrediction.className} (${(topPrediction.probability * 100).toFixed(2)}%)`);
+                            setPrediction(` ${topPrediction.className} (${(topPrediction.probability * 100).toFixed(2)}%)`);
                           }
                         } catch (inferenceError) {
                           console.error('Error during inference:', inferenceError);
@@ -528,38 +524,48 @@ const styles = StyleSheet.create({
   formContainer: {
     flex: 1,
     display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   content: {
     padding: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 500,
   },
   imageContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 20,
-    width: '80%',
+    width: '100%',
   },
   itemImage: {
     width: 250,
     height: 250,
     borderRadius: 10,
-    marginBottom: 10,
+    marginBottom: 20,
+    alignSelf: 'center',
   },
   imageButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     width: '100%',
     marginTop: 20,
+    paddingHorizontal: 10,
   },
   imageButton: {
     flex: 1,
     marginHorizontal: 5,
     borderRadius: 8,
+    maxWidth: 150,
   },
   searchButton: {
-    width: '78%',
-    marginVertical: 15,
+    width: '100%',
+    maxWidth: 312,
+    marginVertical: 25,
     borderRadius: 8,
-    marginBottom: 40,
+    alignSelf: 'center',
   },
   loadingContainer: {
     alignItems: 'center',
@@ -576,8 +582,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     marginVertical: 10,
-    width: '78%',
+    width: '100%',
+    maxWidth: 312,
     alignItems: 'center',
+    alignSelf: 'center',
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -589,6 +597,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 5,
     color: '#333',
+    textAlign: 'center',
   },
   recognizedProduct: {
     fontSize: 18,

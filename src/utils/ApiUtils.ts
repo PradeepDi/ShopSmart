@@ -1,8 +1,6 @@
-// ApiUtils.ts
 import { Alert } from 'react-native';
 
 // Define the base URL for the backend API
-// In a real app, this would come from environment variables or config
 const API_BASE_URL = 'http://192.168.1.10:5000';
 
 // Define the interface for prediction results
@@ -26,9 +24,9 @@ export const checkApiHealth = async (): Promise<boolean> => {
       },
     });
     
-    // If we get any response, consider the API available
-    // We don't need to check content type for HEAD requests
-    return response.status < 500; // Consider any non-server error as "available"
+    // If get any response, consider the API available
+    // don't need to check content type for HEAD requests
+    return response.status < 500; 
   } catch (error) {
     console.error('API health check failed:', error);
     return false;
@@ -42,7 +40,7 @@ export const checkApiHealth = async (): Promise<boolean> => {
  */
 export const recognizeImage = async (base64Image: string): Promise<PredictionResult[]> => {
   try {
-    // If the image is a URL (starts with http), we need to fetch it and convert to base64
+    // If the image is a URL (starts with http), need to fetch it and convert to base64
     let imageData = base64Image;
     
     if (base64Image.startsWith('http')) {
@@ -74,7 +72,6 @@ export const recognizeImage = async (base64Image: string): Promise<PredictionRes
     }
     
     // Ensure the base64 string is properly formatted for the API
-    // If it doesn't have the data:image prefix, add it
     if (!imageData.startsWith('data:image')) {
       imageData = `data:image/jpeg;base64,${imageData}`;
     }
@@ -124,7 +121,7 @@ export const recognizeImage = async (base64Image: string): Promise<PredictionRes
       throw new Error('Invalid response format from API');
     }
     
-    // Transform the API response to match our PredictionResult interface
+    // Transform the API response to match PredictionResult interface
     return result.predictions.map((pred: any) => ({
       className: pred.class,
       probability: pred.probability

@@ -1,4 +1,3 @@
-# app.py
 import os
 import io
 import base64
@@ -18,7 +17,7 @@ logger = logging.getLogger("image-api")
 
 app = Flask(__name__)
 
-# Define your class labels here
+# Define class labels
 class_labels = [
     "Comfort_fabric_conditioner",
     "Prima_noodles",
@@ -33,21 +32,21 @@ saved_model_dir = os.path.join(os.path.dirname(__file__), "model")
 
 # Try to load the model
 try:
-    logger.info(f"🔍 Loading model from: {saved_model_dir}")
+    logger.info(f"Loading model from: {saved_model_dir}")
     model = Sequential([
         InputLayer(input_shape=(224, 224, 3), name="input_image"),
         TFSMLayer(saved_model_dir, call_endpoint="serving_default")
     ])
-    logger.info("✅ Model loaded successfully!")
+    logger.info("Model loaded successfully!")
 except Exception as e:
-    logger.error(f"❌ Failed to load model: {e}")
+    logger.error(f"Failed to load model: {e}")
     raise e  # Stop app if model loading fails
 
 
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        logger.info("📷 Received image for prediction")
+        logger.info("Received image for prediction")
         data = request.get_json()
 
 
@@ -56,7 +55,7 @@ def predict():
         if not image_data:
             raise ValueError("Missing image_data")
 
-        # Remove base64 prefix if present (e.g., "data:image/jpeg;base64,...")
+        # Remove base64 prefix if present
         image_data_clean = re.sub("^data:image/.+;base64,", "", image_data)
         img_bytes = base64.b64decode(image_data_clean)
 
@@ -66,7 +65,7 @@ def predict():
         x = np.expand_dims(x, 0)
 
         preds = model.predict(x)
-        logger.info(f"🔮 Raw prediction result: {preds}")
+        logger.info(f"Raw prediction result: {preds}")
         # Log the keys from the output dict
         logger.info(f"Output keys from model: {list(preds.keys())}")
         
@@ -91,16 +90,16 @@ def predict():
             for i, prob in enumerate(preds_list)
         ]
 
-        # Optionally, sort by confidence (descending)
+        # sort by confidence 
         results.sort(key=lambda x: x["probability"], reverse=True)
 
         return jsonify({"predictions": results})
 
     except Exception as e:
-        logger.exception("❌ Prediction failed")
+        logger.exception("Prediction failed")
         return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
-    logger.info("🚀 Starting API server...")
+    logger.info("Starting API server...")
     app.run(host="0.0.0.0", port=5000, debug=True)
