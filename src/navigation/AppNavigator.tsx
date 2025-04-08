@@ -10,6 +10,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import { VendorDashboardScreen } from '../screens/VendorDashboardScreen';
 import { StoreCreationScreen } from '../screens/StoreCreationScreen';
 import { StoreManagementScreen } from '../screens/StoreManagementScreen';
+import { StoreEditScreen } from '../screens/StoreEditScreen';
 import AddItemScreen from '../screens/AddItemScreen';
 import { ViewItemScreen } from '../screens/ViewItemScreen';
 import PickItemScreen from '../screens/PickItemScreen';
@@ -29,6 +30,7 @@ export type RootStackParamList = {
   VendorDashboard: undefined;
   StoreCreation: undefined;
   StoreManagement: { storeId: string };
+  StoreEdit: { storeId: string; storeName: string; storeAddress: string; storeContact: string; storeCoordinates?: string; };
   AddInventoryItem: { storeId: string };
   ViewItem: { item: { id: string; item_name: string; price: number; stock_status: boolean; description?: string; image_url?: string; } };
   PickItem: { itemName: string; listId?: number; listName?: string };
@@ -56,6 +58,7 @@ export const AppNavigator = () => (
     <Stack.Screen name="VendorDashboard" component={VendorDashboardScreen} />
     <Stack.Screen name="StoreCreation" component={StoreCreationScreen} />
     <Stack.Screen name="StoreManagement" component={StoreManagementScreen} />
+    <Stack.Screen name="StoreEdit" component={StoreEditScreen} />
     <Stack.Screen name="AddInventoryItem" component={AddItemScreen} />
     <Stack.Screen name="ViewItem" component={ViewItemScreen} />
     <Stack.Screen name="PickItem" component={PickItemScreen} />

@@ -3,8 +3,10 @@ import { View, StyleSheet, ScrollView, Text, TouchableOpacity, Image } from 'rea
 import { Button, FAB } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '../../supabaseClient';
 import { useCallback } from 'react';
+import { RootStackParamList } from '../navigation/AppNavigator';
 
 interface Store {
   id: string;
@@ -12,10 +14,14 @@ interface Store {
   address: string;
   contact: string;
   map_link: string;
+  latitude?: number;
+  longitude?: number;
 }
 
+type VendorDashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'VendorDashboard'>;
+
 export const VendorDashboardScreen = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<VendorDashboardScreenNavigationProp>();
   const [stores, setStores] = useState<Store[]>([]);
   const [profileImage, setProfileImage] = useState(require('../../assets/profile.png'));
   const [isProfileImageUrl, setIsProfileImageUrl] = useState(false);
@@ -84,11 +90,25 @@ export const VendorDashboardScreen = () => {
   };
 
   const handleAddStore = () => {
-    navigation.navigate('StoreCreation' as never);
+    navigation.navigate('StoreCreation');
   };
 
   const handleStorePress = (store: Store) => {
-    navigation.navigate('StoreManagement' as never, { storeId: store.id } as never);
+    navigation.navigate('StoreManagement', { storeId: store.id });
+  };
+
+  const handleEditStore = (store: Store, event: any) => {
+    // Prevent the card's onPress from triggering
+    event.stopPropagation();
+    
+    // Navigate to the edit screen with store details
+    navigation.navigate('StoreEdit', { 
+      storeId: store.id,
+      storeName: store.name,
+      storeAddress: store.address,
+      storeContact: store.contact,
+      storeCoordinates: store.latitude && store.longitude ? `${store.latitude}, ${store.longitude}` : ''
+    });
   };
 
   return (
@@ -97,7 +117,7 @@ export const VendorDashboardScreen = () => {
         <Text style={styles.title}>ShopSmart Vendor</Text>
         <TouchableOpacity
           style={styles.profileIconContainer}
-          onPress={() => navigation.navigate('Profile' as never)}
+          onPress={() => navigation.navigate('Profile')}
         >
           <Image
             source={isProfileImageUrl ? { uri: profileImage } : profileImage}
@@ -122,6 +142,12 @@ export const VendorDashboardScreen = () => {
                 <Text style={styles.storeAddress}>{store.address}</Text>
                 <Text style={styles.storeContact}>Contact: {store.contact}</Text>
               </View>
+              <TouchableOpacity 
+                style={styles.editIconContainer}
+                onPress={(event) => handleEditStore(store, event)}
+              >
+                <MaterialCommunityIcons name="pencil" size={24} color="#FF6F61" />
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         ))}
@@ -220,6 +246,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     fontWeight: '400',
+  },
+  editIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFF0EF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 8,
   },
   fab: {
     position: 'absolute',

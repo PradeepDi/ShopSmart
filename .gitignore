@@ -40,3 +40,4 @@ app-example
 #Ignore
 .env
 app.json
+.gitignore
