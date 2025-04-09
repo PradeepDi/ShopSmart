@@ -10,6 +10,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { supabase } from '../../supabaseClient';
 import { config } from '../config';
 import { GOOGLE_MAPS_API_KEY } from '@env';
+import BottomNavBar from '../components/BottomNavBar';
 
 type ViewLocationScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ViewLocation'>;
 type ViewLocationScreenRouteProp = RouteProp<RootStackParamList, 'ViewLocation'>;
@@ -614,6 +615,9 @@ const ViewLocationScreen = () => {
           </Button>
         </View>
       )}
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="ViewLocation" />
+      </View>
     </View>
   );
 };
@@ -739,6 +743,13 @@ const styles = StyleSheet.create({
   calloutText: {
     fontSize: 14,
     color: '#666',
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

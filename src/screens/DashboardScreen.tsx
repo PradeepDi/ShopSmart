@@ -6,6 +6,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient'; 
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import BottomNavBar from '../components/BottomNavBar';
 
 type DashboardScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Dashboard'>;
 
@@ -125,40 +126,52 @@ const DashboardScreen = () => {
           />
         </TouchableOpacity>
       </View>
-      <FlatList
-        data={lists}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.listItem}
-            onPress={() => navigation.navigate('ListView', { listId: parseInt(item.id), listName: item.name })}
-            activeOpacity={0.7}
-          >
-            <View style={styles.listItemContent}>
-              <View style={styles.listIconContainer}>
-                <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#FF6F61" />
+      {lists.length > 0 ? (
+        <FlatList
+          data={lists}
+          renderItem={({ item }) => (
+            <TouchableOpacity
+              style={styles.listItem}
+              onPress={() => navigation.navigate('ListView', { listId: parseInt(item.id), listName: item.name })}
+              activeOpacity={0.7}
+            >
+              <View style={styles.listItemContent}>
+                <View style={styles.listIconContainer}>
+                  <MaterialCommunityIcons name="format-list-bulleted" size={24} color="#FF6F61" />
+                </View>
+                <View style={styles.listTextContainer}>
+                  <Text style={styles.listText}>{item.name}</Text>
+                  <Text style={styles.listItemCount}>{item.item_count || 0} items</Text>
+                </View>
+                <View style={styles.listActions}>
+                  <IconButton
+                    icon="delete"
+                    iconColor="#FF6F61"
+                    size={20}
+                    onPress={(e) => {
+                      e.stopPropagation();
+                      deleteList(item.id);
+                    }}
+                    style={styles.deleteButton}
+                  />
+                </View>
               </View>
-              <View style={styles.listTextContainer}>
-                <Text style={styles.listText}>{item.name}</Text>
-                <Text style={styles.listItemCount}>{item.item_count || 0} items</Text>
-              </View>
-              <View style={styles.listActions}>
-                <IconButton
-                  icon="delete"
-                  iconColor="#FF6F61"
-                  size={20}
-                  onPress={(e) => {
-                    e.stopPropagation();
-                    deleteList(item.id);
-                  }}
-                  style={styles.deleteButton}
-                />
-              </View>
-            </View>
-          </TouchableOpacity>
-        )}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContent}
-      />
+            </TouchableOpacity>
+          )}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContent}
+        />
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Image 
+            source={require('../../assets/empty-list.png')} 
+            style={styles.emptyImage} 
+            resizeMode="contain"
+          />
+          <Text style={styles.emptyText}>No shopping lists yet</Text>
+          <Text style={styles.emptySubText}>Create your first shopping list to get started</Text>
+        </View>
+      )}
       <View style={styles.buttonContainer}>
         <Button
           mode="contained"
@@ -167,6 +180,9 @@ const DashboardScreen = () => {
         >
           Create List
         </Button>
+      </View>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="Dashboard" />
       </View>
     </View>
   );
@@ -258,9 +274,34 @@ const styles = StyleSheet.create({
     margin: 0,
     backgroundColor: '#FFF0EF',
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    marginTop: -40, // Adjust to center content better with header
+  },
+  emptyImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
   buttonContainer: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 53, 
     left: 0,
     right: 0,
     padding: 16,
@@ -275,6 +316,13 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
     marginBottom: 18,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

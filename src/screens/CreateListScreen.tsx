@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { supabase } from '../../supabaseClient';
+import BottomNavBar from '../components/BottomNavBar';
 
 type CreateListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreateList'>;
 
@@ -208,6 +209,13 @@ const CreateListScreen = () => {
           style={styles.list}
           contentContainerStyle={styles.listContent}
         />
+        {!isLoggedIn && (
+          <Text
+            style={styles.loginText}
+          >
+            Login to save lists to your account
+          </Text>
+        )}
         <Button
           mode="contained"
           style={styles.button}
@@ -217,14 +225,10 @@ const CreateListScreen = () => {
         >
           {isCreating ? 'Creating...' : 'Create List'}
         </Button>
-        {!isLoggedIn && (
-          <Text
-            style={styles.loginText}
-          >
-            Login to save lists to your account
-          </Text>
-        )}
       </View>
+        <View style={styles.bottomNavContainer}>
+          <BottomNavBar currentScreen="CreateList" isLoggedIn={isLoggedIn} />
+        </View>
     </View>
   );
 };
@@ -258,7 +262,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   loginText: {
-    marginTop: 10,
+    marginBottom: 10,
+    marginTop: 5,
     color: '#FF6F61',
   },
   header: {
@@ -320,6 +325,7 @@ const styles = StyleSheet.create({
     width: '100%',
     marginVertical: 15,
     paddingVertical: 5,
+    marginBottom: 65,
     justifyContent: 'center',
     backgroundColor: '#FF6F61',
     borderRadius: 8,
@@ -347,6 +353,13 @@ const styles = StyleSheet.create({
     color: '#666',
     marginLeft: 10,
     flex: 1,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
 import { CameraView, CameraType, Camera } from 'expo-camera';
+import BottomNavBar from '../components/BottomNavBar';
 
 interface RouteParams {
   item: {
@@ -462,19 +463,13 @@ export const ViewItemScreen = () => {
               >
                 Update Item
               </Button>
-              
-              <Button
-                mode="outlined"
-                onPress={() => navigation.goBack()}
-                style={styles.backButton}
-                textColor="#FF6F61"
-              >
-                {fromPickItem ? 'Back' : 'Back to Inventory'}
-              </Button>
             </>
           )}
         </View>
       </ScrollView>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="ViewItem" />
+      </View>
     </View>
   );
 };
@@ -653,6 +648,13 @@ const styles = StyleSheet.create({
     width: '80%',
     borderColor: '#FF6F61',
     borderRadius: 8,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

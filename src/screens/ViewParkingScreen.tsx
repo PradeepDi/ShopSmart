@@ -9,6 +9,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { config } from '../config';
 import { GOOGLE_MAPS_API_KEY } from '@env';
+import BottomNavBar from '../components/BottomNavBar';
 
 type ViewParkingScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ViewParking'>;
 
@@ -269,6 +270,9 @@ const ViewParkingScreen = () => {
           </View>
         </View>
       )}
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="ViewParking" />
+      </View>
     </View>
   );
 };
@@ -335,7 +339,7 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     position: 'absolute',
-    bottom: 20,
+    bottom: 80, // Increased to make room for bottom nav bar
     left: 0,
     right: 0,
     paddingHorizontal: 16,
@@ -372,6 +376,13 @@ const styles = StyleSheet.create({
   calloutText: {
     fontSize: 14,
     color: '#666',
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../supabaseClient';
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
+import BottomNavBar from '../components/BottomNavBar';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -375,6 +376,9 @@ const ProfileScreen = () => {
             Logout
           </Button>
         </View>
+        <View style={styles.bottomNavContainer}>
+          <BottomNavBar currentScreen="Profile" />
+        </View>
       </LinearGradient>
     </Provider>
   );
@@ -488,6 +492,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginHorizontal: 4,
     marginLeft: 20,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

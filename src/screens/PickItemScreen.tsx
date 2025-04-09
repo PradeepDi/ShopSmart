@@ -7,6 +7,7 @@ import { RootStackParamList } from '../navigation/AppNavigator';
 import { supabase } from '../../supabaseClient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
+import BottomNavBar from '../components/BottomNavBar';
 
 type PickItemScreenNavigationProp = StackNavigationProp<RootStackParamList, 'PickItem'>;
 type PickItemScreenRouteProp = RouteProp<RootStackParamList, 'PickItem'>;
@@ -577,6 +578,9 @@ const PickItemScreen = () => {
           contentContainerStyle={styles.listContent}
         />
       )}
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="PickItem" />
+      </View>
     </View>
   );
 };
@@ -767,6 +771,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
 });
 

@@ -10,6 +10,7 @@ import { Buffer } from 'buffer';
 import { checkApiHealth, recognizeImage } from '../utils/ApiUtils';
 import { CameraView, Camera } from 'expo-camera';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import BottomNavBar from '../components/BottomNavBar';
 
 interface RouteParams {
   listId?: number;
@@ -498,6 +499,9 @@ export const SearchByImageScreen = () => {
             </View>
           )}
         </View>
+      </View>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="SearchByImage" />
       </View>
     </View>
   );

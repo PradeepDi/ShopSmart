@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { supabase } from '../../supabaseClient';
+import BottomNavBar from '../components/BottomNavBar';
 
 type ListViewScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ListView'>;
 type ListViewScreenRouteProp = RouteProp<RootStackParamList, 'ListView'>;
@@ -535,6 +536,9 @@ const ListViewScreen = () => {
           </View>
         </View>
       </Modal>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="ListView" />
+      </View>
     </View>
   );
 };
@@ -550,7 +554,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     marginHorizontal: 20,
-    marginBottom: 10,
+    marginBottom: 140,
     padding: 15,
     borderRadius: 8,
     elevation: 2,
@@ -741,7 +745,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   bottomSection: {
-    margin: 20,
+    position: 'absolute',
+    bottom: 70, // Increased to make room for bottom nav bar
+    left: 0,
+    right: 0,
+    padding: 16,
+    backgroundColor: '#FAF3F3',
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
   },
   loginButton: {
     backgroundColor: '#FF6F61',
@@ -810,6 +821,13 @@ const styles = StyleSheet.create({
   },
   disabledTextButton: {
     opacity: 0.5,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   }
 });
 

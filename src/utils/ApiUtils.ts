@@ -1,7 +1,7 @@
 import { Alert } from 'react-native';
 
 // Define the base URL for the backend API
-const API_BASE_URL = 'http://192.168.1.10:5000';
+const API_BASE_URL = 'http://10.194.46.111:5000';
 
 // Define the interface for prediction results
 export interface PredictionResult {
