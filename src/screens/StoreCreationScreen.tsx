@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, Text } from 'react-native';
 import { Button, TextInput, Title, Snackbar, HelperText } from 'react-native-paper';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
+import BottomNavBar from '../components/BottomNavBar';
 
 export const StoreCreationScreen = () => {
   const navigation = useNavigation();
@@ -166,6 +167,9 @@ export const StoreCreationScreen = () => {
       >
         {snackbarMessage}
       </Snackbar>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="StoreCreation" />
+      </View>
     </View>
   );
 };
@@ -214,6 +218,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: '100%',
     position: 'absolute',
+    marginBottom: 70,
     bottom: 0,
     left: 0,
     right: 0,
@@ -225,5 +230,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     borderColor: '#FF6F61',
     borderRadius: 8,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });

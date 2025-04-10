@@ -3,6 +3,7 @@ import { View, StyleSheet, ScrollView, Text } from 'react-native';
 import { Button, TextInput, Title, Snackbar, HelperText } from 'react-native-paper';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
+import BottomNavBar from '../components/BottomNavBar';
 
 interface RouteParams {
   storeId: string;
@@ -173,6 +174,9 @@ export const StoreEditScreen = () => {
       >
         {snackbarMessage}
       </Snackbar>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="StoreEdit" />
+      </View>
     </View>
   );
 };
@@ -232,5 +236,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 8,
     borderColor: '#FF6F61',
     borderRadius: 8,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });

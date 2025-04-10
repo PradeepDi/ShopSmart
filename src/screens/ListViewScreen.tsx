@@ -407,10 +407,12 @@ const ListViewScreen = () => {
         contentContainerStyle={styles.listContent}
       />
       {/* Total Price Section */}
-      <View style={styles.totalPriceContainer}>
-        <Text style={styles.totalPriceLabel}>Total Price:</Text>
-        <Text style={styles.totalPriceValue}>Rs. {totalPrice.toFixed(2)}</Text>
-      </View>
+      {isLoggedIn && (
+        <View style={styles.totalPriceContainer}>
+          <Text style={styles.totalPriceLabel}>Total Price:</Text>
+          <Text style={styles.totalPriceValue}>Rs. {totalPrice.toFixed(2)}</Text>
+        </View>
+      )}
       
       {/* Bottom Section */}
       <View style={styles.bottomSection}>
@@ -554,7 +556,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#fff',
     marginHorizontal: 20,
-    marginBottom: 140,
+    marginBottom: 145,
     padding: 15,
     borderRadius: 8,
     elevation: 2,
@@ -751,7 +753,7 @@ const styles = StyleSheet.create({
     right: 0,
     padding: 16,
     backgroundColor: '#FAF3F3',
-    borderTopWidth: 1,
+    borderTopWidth: 0,
     borderTopColor: '#eee',
   },
   loginButton: {
@@ -765,6 +767,7 @@ const styles = StyleSheet.create({
   bottomButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    marginTop: 0,
   },
   button: {
     backgroundColor: '#FF6F61',

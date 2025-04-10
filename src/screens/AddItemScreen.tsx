@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Buffer } from 'buffer';
 import { CameraView, CameraType, Camera } from 'expo-camera';
+import BottomNavBar from '../components/BottomNavBar';
 
 interface RouteParams {
   storeId: string;
@@ -272,47 +273,52 @@ const cameraRef = useRef<CameraView>(null);
   // Camera component
   if (showCamera) {
     return (
-      <View style={styles.cameraContainer}>
-        <CameraView
-          ref={cameraRef}
-          style={styles.camera}
-          type="back"
-          ratio="16:9"
-        >
-          <View style={styles.cameraControls}>
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => setShowCamera(false)}
-            >
-              <Text style={styles.backButtonText}>Cancel</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.captureButton}
-              onPress={async () => {
-                if (cameraRef.current) {
-                  try {
-                    const photo = await cameraRef.current.takePictureAsync();
-                    setShowCamera(false);
-                    if (photo.uri) {
-                      const imageUrl = await uploadImageToStorage(photo.uri);
-                      if (imageUrl) {
-                        setItemImage(imageUrl);
-                        Alert.alert('Success', 'Photo captured and uploaded successfully!');
+      <>
+        <View style={styles.cameraContainer}>
+          <CameraView
+            ref={cameraRef}
+            style={styles.camera}
+            type="back"
+            ratio="16:9"
+          >
+            <View style={styles.cameraControls}>
+              <TouchableOpacity 
+                style={styles.backButton}
+                onPress={() => setShowCamera(false)}
+              >
+                <Text style={styles.backButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.captureButton}
+                onPress={async () => {
+                  if (cameraRef.current) {
+                    try {
+                      const photo = await cameraRef.current.takePictureAsync();
+                      setShowCamera(false);
+                      if (photo.uri) {
+                        const imageUrl = await uploadImageToStorage(photo.uri);
+                        if (imageUrl) {
+                          setItemImage(imageUrl);
+                          Alert.alert('Success', 'Photo captured and uploaded successfully!');
+                        }
                       }
+                    } catch (error) {
+                      console.error('Error taking picture:', error);
+                      Alert.alert('Error', 'Failed to take picture');
                     }
-                  } catch (error) {
-                    console.error('Error taking picture:', error);
-                    Alert.alert('Error', 'Failed to take picture');
                   }
-                }
-              }}
-            >
-              <View style={styles.captureButtonInner} />
-            </TouchableOpacity>
-          </View>
-        </CameraView>
-      </View>
+                }}
+              >
+                <View style={styles.captureButtonInner} />
+              </TouchableOpacity>
+            </View>
+          </CameraView>
+        </View>
+        <View style={styles.bottomNavContainer}>
+          <BottomNavBar currentScreen="AddInventoryItem" />
+        </View>
+      </>
     );
   }
 
@@ -433,6 +439,9 @@ const cameraRef = useRef<CameraView>(null);
           </View>
         </View>
       </ScrollView>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="AddInventoryItem" />
+      </View>
     </View>
   );
 };
@@ -550,6 +559,12 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: 'white',
     fontSize: 18,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
   },
 });
 

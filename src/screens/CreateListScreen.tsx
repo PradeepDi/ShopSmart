@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Alert, ActivityIndicator, Modal } from 'react-native';
 import { TextInput, Button, IconButton, Chip, HelperText } from 'react-native-paper';
+import ScrollPicker from 'react-native-wheel-scrollview-picker';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { supabase } from '../../supabaseClient';
 import BottomNavBar from '../components/BottomNavBar';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 type CreateListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'CreateList'>;
 
@@ -23,6 +25,10 @@ const CreateListScreen = () => {
   const [itemQuantity, setItemQuantity] = useState('1'); // Default quantity is 1
   const [isCreating, setIsCreating] = useState(false); // Guard to prevent duplicate submissions
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null); // null means loading state
+  const [quantityPickerVisible, setQuantityPickerVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingItemIndex, setEditingItemIndex] = useState(-1);
+  const [editingItemQuantity, setEditingItemQuantity] = useState('1');
 
   const addItem = () => {
     if (itemName.trim()) {
@@ -42,9 +48,32 @@ const CreateListScreen = () => {
     setItems(items.filter((_, i) => i !== index));
   };
   
-  // Function to validate quantity input
-  const isQuantityValid = () => {
-    const quantity = parseInt(itemQuantity);
+  const editItem = (index: number) => {
+    setEditingItemIndex(index);
+    setEditingItemQuantity(items[index].quantity.toString());
+    setEditModalVisible(true);
+  };
+  
+  const saveEditedItem = () => {
+    if (editingItemIndex !== -1) {
+      const quantity = parseInt(editingItemQuantity) || 1;
+      
+      // Update the local state
+      const updatedItems = [...items];
+      updatedItems[editingItemIndex] = {
+        ...updatedItems[editingItemIndex],
+        quantity: quantity
+      };
+      setItems(updatedItems);
+      setEditModalVisible(false);
+      setEditingItemIndex(-1);
+      setEditingItemQuantity('1');
+    }
+  };
+  
+  // Function to validate quantity input for both add and edit
+  const isQuantityValid = (value: string = itemQuantity) => {
+    const quantity = parseInt(value);
     return !isNaN(quantity) && quantity > 0;
   };
 
@@ -167,8 +196,8 @@ const CreateListScreen = () => {
           <TextInput
             placeholder="Qty"
             value={itemQuantity}
-            onChangeText={setItemQuantity}
-            keyboardType="numeric"
+            onPress={() => setQuantityPickerVisible(true)}
+            showSoftInputOnFocus={false}
             style={styles.quantityInput}
             mode="outlined"
             outlineColor="#b5b1b1"
@@ -198,11 +227,24 @@ const CreateListScreen = () => {
                 <Text style={styles.itemText}>{item.name}</Text>
                 <Text style={styles.quantityText}>Qty: {item.quantity}</Text>
               </View>
-              <IconButton
-                icon="delete"
-                size={20}
-                onPress={() => removeItem(index)}
-              />
+              <View style={styles.itemActions}>
+                <View style={styles.iconWrapper}>
+                  <IconButton
+                    icon="pencil"
+                    size={20}
+                    onPress={() => editItem(index)}
+                    iconColor="#FF6F61"
+                  />
+                </View>
+                <View style={styles.iconWrapper}>
+                  <IconButton
+                    icon="delete"
+                    size={20}
+                    onPress={() => removeItem(index)}
+                    iconColor="#FF6F61"
+                  />
+                </View>
+              </View>
             </View>
           )}
           keyExtractor={(item, index) => index.toString()}
@@ -229,6 +271,88 @@ const CreateListScreen = () => {
         <View style={styles.bottomNavContainer}>
           <BottomNavBar currentScreen="CreateList" isLoggedIn={isLoggedIn} />
         </View>
+        
+        {/* Quantity Picker Modal */}
+        <Modal
+          visible={quantityPickerVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setQuantityPickerVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Select Quantity</Text>
+              <View style={styles.pickerContainer}>
+                <ScrollPicker
+                  dataSource={Array.from({length: 99}, (_, i) => (i + 1).toString())}
+                  selectedIndex={parseInt(itemQuantity) - 1 || 0}
+                  renderItem={(data, index, isSelected) => (
+                    <Text style={[styles.pickerItemText, isSelected && styles.selectedItemText]}>{data}</Text>
+                  )}
+                  onValueChange={(data) => {
+                    setItemQuantity(data);
+                  }}
+                  wrapperHeight={150}
+                  wrapperWidth={150}
+                  wrapperBackground={'#FFFFFF'}
+                  itemHeight={50}
+                  highlightColor={'#FF6F61'}
+                  highlightBorderWidth={1}
+                  activeItemColor={'#FF6F61'}
+                  itemColor={'#999'}
+                />
+              </View>
+              <Button 
+                mode="contained" 
+                onPress={() => setQuantityPickerVisible(false)}
+                style={styles.doneButton}
+              >
+                Done
+              </Button>
+            </View>
+          </View>
+        </Modal>
+
+        {/* Edit Item Quantity Modal */}
+        <Modal
+          visible={editModalVisible}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setEditModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Edit Quantity</Text>
+              <View style={styles.pickerContainer}>
+                <ScrollPicker
+                  dataSource={Array.from({length: 99}, (_, i) => (i + 1).toString())}
+                  selectedIndex={parseInt(editingItemQuantity) - 1 || 0}
+                  renderItem={(data, index, isSelected) => (
+                    <Text style={[styles.pickerItemText, isSelected && styles.selectedItemText]}>{data}</Text>
+                  )}
+                  onValueChange={(data) => {
+                    setEditingItemQuantity(data);
+                  }}
+                  wrapperHeight={150}
+                  wrapperWidth={150}
+                  wrapperBackground={'#FFFFFF'}
+                  itemHeight={50}
+                  highlightColor={'#FF6F61'}
+                  highlightBorderWidth={1}
+                  activeItemColor={'#FF6F61'}
+                  itemColor={'#999'}
+                />
+              </View>
+              <Button 
+                mode="contained" 
+                onPress={saveEditedItem}
+                style={styles.doneButton}
+              >
+                Save
+              </Button>
+            </View>
+          </View>
+        </Modal>
     </View>
   );
 };
@@ -306,6 +430,50 @@ const styles = StyleSheet.create({
     marginRight: 8,
     backgroundColor: '#fff',
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '70%',
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#333',
+  },
+  pickerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 20,
+    height: 150,
+    overflow: 'hidden',
+  },
+  pickerItemText: {
+    fontSize: 24,
+    color: '#333',
+  },
+  selectedItemText: {
+    color: '#FF6F61',
+    fontWeight: 'bold',
+  },
+  doneButton: {
+    width: '50%',
+    backgroundColor: '#FF6F61',
+    marginBottom: 10,
+  },
   addButton: {
     backgroundColor: '#FF6F61',
     borderRadius: 4,
@@ -343,6 +511,23 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  itemActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: '#FFF0EF',
+    margin: 0,
+  },
+  iconWrapper: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f7d9d7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 5,
   },
   itemText: {
     fontSize: 16,

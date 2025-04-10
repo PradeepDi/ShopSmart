@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import { supabase } from '../../supabaseClient';
 
 type BottomNavBarProps = {
   currentScreen?: keyof RootStackParamList;
@@ -12,10 +13,45 @@ type BottomNavBarProps = {
 
 const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentScreen, isLoggedIn = true }) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const [isVendor, setIsVendor] = useState(false);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      checkUserType();
+    }
+  }, [isLoggedIn]);
+
+  const checkUserType = async () => {
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !userData?.user) {
+        return;
+      }
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', userData.user.id)
+        .single();
+
+      if (profileData?.user_type === 'Vendor') {
+        setIsVendor(true);
+      } else {
+        setIsVendor(false);
+      }
+    } catch (error) {
+      console.error('Error checking user type:', error);
+    }
+  };
 
   const handleHomePress = () => {
-    if (isLoggedIn && currentScreen !== 'Dashboard') {
-      navigation.navigate('Dashboard');
+    if (isLoggedIn) {
+      if (isVendor && currentScreen !== 'VendorDashboard') {
+        navigation.navigate('VendorDashboard');
+      } else if (!isVendor && currentScreen !== 'Dashboard') {
+        navigation.navigate('Dashboard');
+      }
     }
   };
 
@@ -40,7 +76,7 @@ const BottomNavBar: React.FC<BottomNavBarProps> = ({ currentScreen, isLoggedIn =
         <MaterialCommunityIcons 
           name="home" 
           size={32} 
-          color={currentScreen === 'Dashboard' ? '#FF6F61' : !isLoggedIn ? '#ccc' : '#666'} 
+          color={currentScreen === 'Dashboard' || currentScreen === 'VendorDashboard' ? '#FF6F61' : !isLoggedIn ? '#ccc' : '#666'} 
         />
       </TouchableOpacity>
       

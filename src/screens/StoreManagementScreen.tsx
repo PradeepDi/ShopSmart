@@ -4,6 +4,7 @@ import { Button, Card, Title, Paragraph, FAB, IconButton, Divider, Switch, TextI
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../../supabaseClient';
+import BottomNavBar from '../components/BottomNavBar';
 
 interface InventoryItem {
   id: string;
@@ -223,7 +224,15 @@ export const StoreManagementScreen = () => {
         
         <ScrollView style={styles.inventoryList}>
           {inventory.length === 0 && !loading ? (
-            <Paragraph style={styles.emptyMessage}>No items in inventory. Add some items to get started!</Paragraph>
+            <View style={styles.emptyContainer}>
+              <Image 
+                source={require('../../assets/add-item.png')} 
+                style={styles.emptyImage} 
+                resizeMode="contain"
+              />
+              <Text style={styles.emptyText}>No items in inventory</Text>
+              <Text style={styles.emptySubText}>Add items to get started</Text>
+            </View>
           ) : filteredInventory.length === 0 && searchQuery.trim() !== '' ? (
             <Paragraph style={styles.emptyMessage}>No items match your search.</Paragraph>
           ) : (
@@ -363,6 +372,9 @@ export const StoreManagementScreen = () => {
             </Dialog.Actions>
           </Dialog>
         </Portal>
+      </View>
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="StoreManagement" />
       </View>
     </Provider>
   );
@@ -521,9 +533,41 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     margin: 16,
+    marginBottom: 85,
     right: 10,
     bottom: 10,
     backgroundColor: '#FF6F61',
     borderRadius: 8,
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    marginTop: 40,
+  },
+  emptyImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
   },
 });

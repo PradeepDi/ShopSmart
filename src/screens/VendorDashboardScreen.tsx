@@ -7,6 +7,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { supabase } from '../../supabaseClient';
 import { useCallback } from 'react';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import BottomNavBar from '../components/BottomNavBar';
 
 interface Store {
   id: string;
@@ -125,33 +126,45 @@ export const VendorDashboardScreen = () => {
           />
         </TouchableOpacity>
       </View>
-      <ScrollView style={styles.storeList} contentContainerStyle={{ paddingBottom: 80 }}>
-        {stores.map((store) => (
-          <TouchableOpacity
-            key={store.id}
-            style={styles.storeCard}
-            onPress={() => handleStorePress(store)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.storeItemContent}>
-              <View style={styles.storeIconContainer}>
-                <MaterialCommunityIcons name="store" size={24} color="#FF6F61" />
+      {stores.length > 0 ? (
+        <ScrollView style={styles.storeList} contentContainerStyle={{ paddingBottom: 80 }}>
+          {stores.map((store) => (
+            <TouchableOpacity
+              key={store.id}
+              style={styles.storeCard}
+              onPress={() => handleStorePress(store)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.storeItemContent}>
+                <View style={styles.storeIconContainer}>
+                  <MaterialCommunityIcons name="store" size={24} color="#FF6F61" />
+                </View>
+                <View style={styles.storeTextContainer}>
+                  <Text style={styles.storeText}>{store.name}</Text>
+                  <Text style={styles.storeAddress}>{store.address}</Text>
+                  <Text style={styles.storeContact}>Contact: {store.contact}</Text>
+                </View>
+                <TouchableOpacity 
+                  style={styles.editIconContainer}
+                  onPress={(event) => handleEditStore(store, event)}
+                >
+                  <MaterialCommunityIcons name="pencil" size={24} color="#FF6F61" />
+                </TouchableOpacity>
               </View>
-              <View style={styles.storeTextContainer}>
-                <Text style={styles.storeText}>{store.name}</Text>
-                <Text style={styles.storeAddress}>{store.address}</Text>
-                <Text style={styles.storeContact}>Contact: {store.contact}</Text>
-              </View>
-              <TouchableOpacity 
-                style={styles.editIconContainer}
-                onPress={(event) => handleEditStore(store, event)}
-              >
-                <MaterialCommunityIcons name="pencil" size={24} color="#FF6F61" />
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Image 
+            source={require('../../assets/shop-icon.png')} 
+            style={styles.emptyImage} 
+            resizeMode="contain"
+          />
+          <Text style={styles.emptyText}>No stores yet</Text>
+          <Text style={styles.emptySubText}>Add store to get started</Text>
+        </View>
+      )}
       <FAB
         style={styles.fab}
         color='white'
@@ -159,6 +172,9 @@ export const VendorDashboardScreen = () => {
         label="Add Store"
         onPress={handleAddStore}
       />
+      <View style={styles.bottomNavContainer}>
+        <BottomNavBar currentScreen="VendorDashboard" />
+      </View>
     </View>
   );
 };
@@ -259,11 +275,43 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     margin: 16,
+    marginBottom: 85,
     right: 10,
     bottom: 10,
     backgroundColor: '#FF6F61',
     borderRadius: 8,
     height: 50,
     justifyContent: 'center',
+  },
+  bottomNavContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    marginTop: -40, // Adjust to center content better with header
+  },
+  emptyImage: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  emptySubText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 30,
   },
 });
