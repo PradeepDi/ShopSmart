@@ -634,7 +634,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
-    marginBottom: 16,
+    marginBottom: -2,
   },
   title: {
     fontSize: 24,
@@ -644,13 +644,14 @@ const styles = StyleSheet.create({
   mapContainer: {
     flex: 1,
     padding: 16,
+    paddingBottom: 70, // Add padding to account for bottom navigation bar
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 10,
     elevation: 3,
   },
   searchInput: {
@@ -660,8 +661,9 @@ const styles = StyleSheet.create({
   },
   map: {
     width: '100%',
-    height: '60%',
+    height: '62%',
     borderRadius: 10,
+    marginBottom: 0, // Add margin to ensure buttons are visible
   },
   infoContainer: {
     backgroundColor: '#fff',
@@ -709,11 +711,13 @@ const styles = StyleSheet.create({
   refreshButton: {
     backgroundColor: '#FF6F61',
     marginTop: 10,
+    marginBottom: 70, // Add bottom margin to ensure button is above nav bar
     borderRadius: 8,
+    zIndex: 5, // Ensure button appears above other elements
   },
   searchButton: {
     backgroundColor: '#4CAF50',
-    marginTop: 10,
+    marginTop: 0,
     borderRadius: 8,
   },
   searchingContainer: {
