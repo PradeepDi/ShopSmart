@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { TextInput, Button, Provider, Checkbox } from 'react-native-paper';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -55,11 +55,21 @@ const LoginScreen = () => {
           .eq('id', userData.user.id)
           .single();
 
-        if (profileData?.user_type === 'Vendor') {
-          navigation.navigate('VendorDashboard');
-        } else {
-          navigation.navigate('Dashboard');
-        }
+        // Show success alert
+        Alert.alert(
+          "Login Successful",
+          `Welcome to ShopSmart!`,
+          [
+            { text: "OK", onPress: () => {
+              // Navigate after alert is dismissed
+              if (profileData?.user_type === 'Vendor') {
+                navigation.navigate('VendorDashboard');
+              } else {
+                navigation.navigate('Dashboard');
+              }
+            }}
+          ]
+        );
       }
     }
   };

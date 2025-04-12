@@ -222,7 +222,10 @@ export const StoreManagementScreen = () => {
           />
         </View>
         
-        <ScrollView style={styles.inventoryList}>
+        <ScrollView 
+          style={styles.inventoryList}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
           {inventory.length === 0 && !loading ? (
             <View style={styles.emptyContainer}>
               <Image 

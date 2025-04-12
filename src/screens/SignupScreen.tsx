@@ -73,7 +73,7 @@ const SignupScreen = () => {
           </View>
           
           <Text style={styles.title}>Create an Account</Text>
-          <Text style={styles.subtitle}>Please fill in the form to register</Text>
+          <Text style={styles.subtitle}>Please fill in the details to register</Text>
           <TextInput
             placeholder="Name"
             value={name}

@@ -575,7 +575,7 @@ const PickItemScreen = () => {
           data={filteredItems}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={[styles.listContent, { paddingBottom: 100 }]}
         />
       )}
       <View style={styles.bottomNavContainer}>
