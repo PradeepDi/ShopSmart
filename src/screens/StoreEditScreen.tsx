@@ -230,6 +230,7 @@ const styles = StyleSheet.create({
     right: 0,
     backgroundColor: '#FAF3F3',
     padding: 30,
+    marginBottom: 70,
   },
   button: {
     flex: 1,
