@@ -539,7 +539,7 @@ const ListViewScreen = () => {
         </View>
       </Modal>
       <View style={styles.bottomNavContainer}>
-        <BottomNavBar currentScreen="ListView" />
+        <BottomNavBar currentScreen="ListView" isLoggedIn={isLoggedIn} />
       </View>
     </View>
   );
