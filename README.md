@@ -66,7 +66,7 @@ ShopSmart allows users to search for products by uploading an image. The system 
 
 📷 Demo
 
-[![Watch the demo](https://img.youtube.com/vi/JJj2HcqgaW4/maxresdefault.jpg)](https://www.youtube.com/watch?v=JJj2HcqgaW4)
+[![Watch the demo](https://img.youtu.be/4GfpWlOhBxI/maxresdefault.jpg)](https://youtu.be/4GfpWlOhBxI)
 
 
 
